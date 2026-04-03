@@ -1,122 +1,101 @@
+¡Excelente! Aquí tienes el archivo `main.dart` completo para tu "PomodoroManuscriptApp", siguiendo todos los requisitos.
+
 import 'package:flutter/material.dart';
 
+// Importaciones de las pantallas desde 'presentation/screens/'
+import 'package:pomodoro_manuscript_app/presentation/screens/welcomescreen.dart';
+import 'package:pomodoro_manuscript_app/presentation/screens/pomodoroscreen.dart';
+import 'package:pomodoro_manuscript_app/presentation/screens/settingsscreen.dart';
+import 'package:pomodoro_manuscript_app/presentation/screens/statisticsscreen.dart';
+
 void main() {
-  runApp(const MyApp());
+  runApp(const PomodoroManuscriptApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class PomodoroManuscriptApp extends StatelessWidget {
+  const PomodoroManuscriptApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    // Definimos el color primario y el acento
+    const Color primaryManuscriptColor = Color(0xFFF5F5DC); // Beige
+    const Color accentManuscriptColor = Color(0xFF8B4513); // Marrón sepia
+
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Pomodoro Manuscript App',
+      debugShowCheckedModeBanner: false, // Opcional: para quitar el banner de debug
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+        useMaterial3: true,
+        // Generamos un ColorScheme a partir del color primario (beige)
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: primaryManuscriptColor,
+          // Puedes ajustar otros colores si quieres que el acento sea más prominente
+          // Por ejemplo, para que el color de acento influya en el 'secondary' o 'tertiary'
+          // o usarlo directamente en widgets específicos.
+          // Aquí, el seedColor es el principal generador.
+          // Si quieres que el accentManuscriptColor sea el color de acento principal
+          // de tu esquema, podrías asignarlo a 'secondary' o 'tertiary'.
+          // Por simplicidad y siguiendo el requisito de fromSeed, lo dejamos así.
+          // Si necesitas que el accentManuscriptColor sea el 'accent' del tema,
+          // tendrías que configurarlo en widgets específicos o en un ThemeExtension.
+        ).copyWith(
+          // Opcional: Si quieres forzar el color de acento en el esquema
+          // Esto sobrescribe el color 'secondary' generado por fromSeed
+          secondary: accentManuscriptColor,
+          // También puedes considerar primaryContainer, secondaryContainer, etc.
+        ),
+        // Puedes personalizar más el tema aquí, por ejemplo:
+        appBarTheme: const AppBarTheme(
+          backgroundColor: primaryManuscriptColor,
+          foregroundColor: accentManuscriptColor, // Color del texto y iconos en AppBar
+          elevation: 0, // Sin sombra para un look más plano
+        ),
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: accentManuscriptColor,
+          foregroundColor: primaryManuscriptColor,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: accentManuscriptColor,
+            foregroundColor: primaryManuscriptColor,
+          ),
+        ),
+        // Otros ajustes de texto, etc., para la estética de manuscrito
+        textTheme: const TextTheme(
+          // Puedes cargar una fuente personalizada aquí si tienes una
+          // Por ejemplo, para simular una fuente de máquina de escribir o manuscrita
+          // bodyLarge: TextStyle(fontFamily: 'ManuscriptFont'),
+          // bodyMedium: TextStyle(fontFamily: 'ManuscriptFont'),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+      
+      initialRoute: '/welcome', // La pantalla inicial es WelcomeScreen
+
+      // Definición de las rutas nombradas para todas las pantallas
+      routes: {
+        '/welcome': (context) => const WelcomeScreen(),
+        '/pomodoro': (context) => const PomodoroScreen(),
+        '/settings': (context) => const SettingsScreen(),
+        '/statistics': (context) => const StatisticsScreen(),
+      },
     );
   }
 }
+
+**Explicación y Notas:**
+
+1.  **`void main()` y `runApp()`**: El punto de entrada de la aplicación, ejecutando `PomodoroManuscriptApp`.
+2.  **Importaciones**: Todas las pantallas se importan desde `package:pomodoro_manuscript_app/presentation/screens/`. Asegúrate de que el nombre de tu proyecto sea `pomodoro_manuscript_app` en tu `pubspec.yaml` para que estas importaciones funcionen correctamente. Si tu proyecto tiene un nombre diferente, ajusta el prefijo del paquete.
+3.  **`MaterialApp`**:
+    *   `title`: Establecido como "Pomodoro Manuscript App".
+    *   `debugShowCheckedModeBanner: false`: Opcional, pero útil para una apariencia más limpia en desarrollo.
+    *   `theme`:
+        *   `useMaterial3: true`: Habilitado como se solicitó.
+        *   `colorScheme: ColorScheme.fromSeed(seedColor: primaryManuscriptColor)`: Genera un esquema de colores completo basado en el color beige (`#F5F5DC`).
+        *   `.copyWith(secondary: accentManuscriptColor)`: Aunque `fromSeed` genera un esquema, a veces el color de acento deseado no se alinea perfectamente con los colores generados. Al usar `copyWith` y asignar `accentManuscriptColor` a `secondary`, nos aseguramos de que este color marrón esté disponible en el `ColorScheme` para widgets que usen `Theme.of(context).colorScheme.secondary`. Puedes ajustar qué propiedad del `ColorScheme` (e.g., `tertiary`, `error`, `surface`) se alinea mejor con tu intención para el color de acento.
+        *   **Personalización adicional del tema**: He añadido ejemplos de `appBarTheme`, `floatingActionButtonTheme`, y `elevatedButtonTheme` para que los colores primario y de acento se apliquen directamente a elementos comunes, reforzando la estética de manuscrito. También hay un comentario sobre `textTheme` para fuentes personalizadas.
+4.  **`initialRoute: '/welcome'`**: Establece `WelcomeScreen` como la primera pantalla que se muestra al iniciar la aplicación.
+5.  **`routes`**: Un mapa que define todas las rutas nombradas. Cada clave es el nombre de la ruta (e.g., `'/pomodoro'`) y cada valor es una función que construye el widget de la pantalla correspondiente.
+6.  **`const`**: Se han añadido `const` donde es posible para optimizaciones de rendimiento en Flutter.
+
+Este archivo debería compilar sin errores, asumiendo que los archivos de pantalla (`welcomescreen.dart`, etc.) existen en las rutas especificadas y contienen clases `WelcomeScreen`, `PomodoroScreen`, etc., que extienden `StatelessWidget` o `StatefulWidget`.

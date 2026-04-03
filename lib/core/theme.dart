@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 // Eres libre de ser creativo. Define los colores, tipografías, y la estructura
 // completa del [ThemeData] para hacer una UI espectacular.
 // Utiliza estos colores iniciales provistos por el comando como punto de inicio:
-// 
+//
 // Primary Color: F5F5DC
 // Accent Color: 8B4513
 // ============================================================================

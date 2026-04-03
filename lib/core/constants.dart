@@ -8,7 +8,7 @@ class AppConstants {
   static const String appName = 'PomodoroManuscriptApp';
   static const String primaryHex = '#F5F5DC';
   static const String accentHex = '#8B4513';
-  
+
   // Agrega más constantes aquí...
 }
 
