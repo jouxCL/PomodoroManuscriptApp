@@ -1,8 +1,22 @@
-¡Excelente! Aquí tienes el archivo `main.dart` completo para tu "PomodoroManuscriptApp", siguiendo todos los requisitos.
+¡Claro! Aquí tienes el archivo `main.dart` completo para tu "PomodoroManuscriptApp", siguiendo todas tus especificaciones.
+
+He añadido algunas mejoras al tema para que la estética de "manuscrito en papel beige" y el color acento se apliquen de forma más consistente, como el color de fondo del `Scaffold` y los colores de la `AppBar` y los botones.
+
+**Suposición importante:** Para que las rutas nombradas funcionen correctamente y sean robustas, he asumido que cada una de tus pantallas (`WelcomeScreen`, `PomodoroScreen`, etc.) tiene una propiedad estática `routeName` definida, por ejemplo:
+
+// En welcomescreen.dart
+class WelcomeScreen extends StatelessWidget {
+  static const String routeName = '/welcome'; // <-- Esta línea
+  // ...
+}
+
+Si tus archivos de pantalla no tienen esto, deberías añadirlo o cambiar las rutas en `main.dart` para usar cadenas literales directamente (ej. `'/welcome'`).
+
+---
 
 import 'package:flutter/material.dart';
 
-// Importaciones de las pantallas desde 'presentation/screens/'
+// Importaciones de las pantallas
 import 'package:pomodoro_manuscript_app/presentation/screens/welcomescreen.dart';
 import 'package:pomodoro_manuscript_app/presentation/screens/pomodoroscreen.dart';
 import 'package:pomodoro_manuscript_app/presentation/screens/settingsscreen.dart';
@@ -15,85 +29,88 @@ void main() {
 class PomodoroManuscriptApp extends StatelessWidget {
   const PomodoroManuscriptApp({super.key});
 
+  // Definición de los colores para fácil acceso y consistencia
+  static const Color kPrimaryColor = Color(0xFFF5F5DC); // Papel beige
+  static const Color kAccentColor = Color(0xFF8B4513); // Marrón sepia/tinta
+
   @override
   Widget build(BuildContext context) {
-    // Definimos el color primario y el color de acento
-    // El color primario se usará como seedColor para generar el ColorScheme.
-    // El color de acento (#8B4513 - Saddle Brown) se puede integrar
-    // más específicamente en el tema si se desea que afecte a elementos
-    // como botones flotantes, texto de acento, etc., más allá de lo que
-    // genera automáticamente ColorScheme.fromSeed.
-    const Color primaryManuscriptColor = Color(0xFFF5F5DC); // Beige
-    const Color accentManuscriptColor = Color(0xFF8B4513); // Saddle Brown
-
     return MaterialApp(
-      title: 'PomodoroManuscriptApp',
-      // Habilitar Material 3
-      useMaterial3: true,
+      title: 'Pomodoro Manuscript App',
+      debugShowCheckedModeBanner: false, // Oculta el banner de "Debug"
+
       theme: ThemeData(
         useMaterial3: true,
-        // Generar un ColorScheme a partir del color beige principal.
-        // Esto creará una paleta de colores coherente basada en el beige.
+        // Configuración del ColorScheme usando el color primario como semilla
         colorScheme: ColorScheme.fromSeed(
-          seedColor: primaryManuscriptColor,
-          // Opcionalmente, puedes ajustar colores específicos si ColorScheme.fromSeed
-          // no genera el acento deseado para ciertos elementos.
-          // Por ejemplo:
-          // primary: primaryManuscriptColor,
-          // secondary: accentManuscriptColor, // Podría usarse para elementos secundarios
-          // tertiary: accentManuscriptColor, // O para elementos terciarios
-          // Puedes personalizar más aquí si es necesario.
+          seedColor: kPrimaryColor,
+          // Puedes ajustar otros colores del esquema si fromSeed no genera lo que esperas
+          // Por ejemplo, para asegurar que el acento sea el color secundario:
+          // secondary: kAccentColor,
+          // tertiary: kAccentColor,
         ).copyWith(
-          // Si quieres que el color de acento sea explícitamente el 'secondary' o 'tertiary'
-          // del ColorScheme, puedes usar copyWith.
-          // Por ejemplo, para que el color de acento sea el color secundario:
-          secondary: accentManuscriptColor,
-          // O para que sea el color de acento para FloatingActionButtons, etc.
-          // Puedes ajustar según cómo quieras que se manifieste el acento.
+          // Aseguramos que el color de los elementos interactivos (como el FAB) use el acento
+          primary: kPrimaryColor, // Mantener el primario beige
+          secondary: kAccentColor, // Usar el acento para elementos secundarios
+          onSecondary: Colors.white, // Texto blanco sobre el acento
+          tertiary: kAccentColor, // Otro nivel de acento si es necesario
+          onTertiary: Colors.white,
         ),
-        // Puedes personalizar más el tema aquí, por ejemplo, para fuentes,
-        // estilos de texto, botones, etc., para reforzar la estética de manuscrito.
-        // Por ejemplo, para un FloatingActionButton que use el color de acento:
+
+        // Color de fondo general para los Scaffolds (el "papel")
+        scaffoldBackgroundColor: kPrimaryColor,
+
+        // Tema para la AppBar
+        appBarTheme: const AppBarTheme(
+          backgroundColor: kPrimaryColor, // Fondo de la AppBar beige
+          foregroundColor: kAccentColor, // Color del texto/iconos en la AppBar (tinta)
+          elevation: 0, // Sin sombra para un look más plano de manuscrito
+          centerTitle: true,
+        ),
+
+        // Tema para los botones elevados
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kAccentColor, // Fondo del botón con el color acento
+            foregroundColor: Colors.white, // Texto del botón blanco
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8), // Bordes ligeramente redondeados
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            textStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+
+        // Tema para los Floating Action Buttons
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: accentManuscriptColor,
-          foregroundColor: Colors.white, // Color del icono/texto en el FAB
+          backgroundColor: kAccentColor,
+          foregroundColor: Colors.white,
         ),
-        // Ejemplo de personalización de texto para una fuente que simule escritura a mano
+
+        // Tema para el texto (opcional, si quieres usar una fuente específica)
+        // Asegúrate de añadir la fuente a tu pubspec.yaml si la usas.
+        // Por ejemplo, para una fuente tipo serif:
         // textTheme: const TextTheme(
-        //   bodyLarge: TextStyle(fontFamily: 'ManuscriptFont'), // Necesitarías importar una fuente
-        //   bodyMedium: TextStyle(fontFamily: 'ManuscriptFont'),
+        //   bodyLarge: TextStyle(fontFamily: 'Merriweather', color: kAccentColor),
+        //   bodyMedium: TextStyle(fontFamily: 'Merriweather', color: kAccentColor),
+        //   titleLarge: TextStyle(fontFamily: 'Merriweather', color: kAccentColor),
+        //   headlineMedium: TextStyle(fontFamily: 'Merriweather', color: kAccentColor),
         // ),
       ),
 
-      // Definir la pantalla inicial de la aplicación
-      initialRoute: '/',
+      // Ruta inicial de la aplicación
+      initialRoute: WelcomeScreen.routeName,
 
-      // Definir las rutas nombradas para todas las pantallas
+      // Definición de todas las rutas nombradas
       routes: {
-        '/': (context) => const WelcomeScreen(),
-        '/pomodoro': (context) => const PomodoroScreen(),
-        '/settings': (context) => const SettingsScreen(),
-        '/statistics': (context) => const StatisticsScreen(),
+        WelcomeScreen.routeName: (context) => const WelcomeScreen(),
+        PomodoroScreen.routeName: (context) => const PomodoroScreen(),
+        SettingsScreen.routeName: (context) => const SettingsScreen(),
+        StatisticsScreen.routeName: (context) => const StatisticsScreen(),
       },
     );
   }
 }
-
-**Explicación y Consideraciones Adicionales:**
-
-1.  **`main()` y `runApp()`**: El punto de entrada estándar de cualquier aplicación Flutter.
-2.  **`PomodoroManuscriptApp` (Widget Raíz)**: Un `StatelessWidget` que envuelve toda la aplicación.
-3.  **`MaterialApp`**:
-    *   `title`: El título de la aplicación que se muestra en el selector de tareas del sistema operativo.
-    *   `useMaterial3: true`: Activa el diseño de Material Design 3.
-    *   `theme`:
-        *   `ThemeData(useMaterial3: true, ...)`: Configura el tema de la aplicación.
-        *   `colorScheme: ColorScheme.fromSeed(seedColor: primaryManuscriptColor)`: Esta es la forma recomendada en Material 3 para generar una paleta de colores coherente. Toma tu `primaryManuscriptColor` (beige) como base y genera automáticamente colores para `primary`, `secondary`, `tertiary`, `surface`, `background`, etc.
-        *   `.copyWith(secondary: accentManuscriptColor)`: Aunque `fromSeed` genera un `ColorScheme` completo, a veces quieres asegurarte de que un color específico (como tu color de acento `#8B4513`) se use para un rol particular. Aquí, lo asignamos al rol `secondary` del `ColorScheme`. Esto significa que los widgets que por defecto usan el color secundario del tema (como algunos `FloatingActionButton`s o `Switch`es) adoptarán este color.
-        *   `floatingActionButtonTheme`: Un ejemplo de cómo podrías personalizar un widget específico para usar tu color de acento, si el `ColorScheme` por sí solo no lo aplica donde deseas.
-    *   `initialRoute: '/'`: Establece `WelcomeScreen` como la primera pantalla que se muestra al iniciar la app.
-    *   `routes`: Un mapa que asocia nombres de ruta (`String`) con funciones que construyen los widgets de las pantallas (`WidgetBuilder`). Esto permite la navegación usando `Navigator.pushNamed()`.
-4.  **Importaciones**: Todas las pantallas se importan correctamente desde `package:pomodoro_manuscript_app/presentation/screens/`. Asegúrate de que la estructura de carpetas sea exactamente `lib/presentation/screens/`.
-5.  **`const`**: Se usa `const` donde es posible para optimizaciones de rendimiento en Flutter.
-
-Este `main.dart` te proporciona una base sólida y funcional para tu "PomodoroManuscriptApp" con la estética y requisitos especificados.
