@@ -1,22 +1,40 @@
-name: pomodoromanuscriptapp
-description: "PomodoroManuscriptApp"
+name: pomodoro_manuscript_app
+description: Aplicación de Pomodoro con temporizadores configurables, seguimiento de estadísticas y una estética de manuscrito en papel beige.
+
+publish_to: 'none'
+
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.10.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  # =========================================================================
-  # TODO: AGENTE OMEGA - Añade aquí las dependencias que consideres necesarias
-  # para construir la aplicación con el máximo nivel de calidad y creatividad.
-  # (ej: manejo de estado, red, UI, etc.)
-  # =========================================================================
+
+  cupertino_icons:
+  provider:
+  shared_preferences:
+  audioplayers:
+  cached_network_image:
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/audio/
+
+  fonts:
+    - family: TimesNewRoman
+      fonts:
+        - asset: assets/fonts/TimesNewRoman.ttf
+        - asset: assets/fonts/TimesNewRomanBold.ttf
+          weight: 700
+        - asset: assets/fonts/TimesNewRomanItalic.ttf
+          style: italic
