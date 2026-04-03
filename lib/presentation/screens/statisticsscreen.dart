@@ -1,179 +1,101 @@
-Aquí tienes el código Dart completo y funcional para la pantalla `StatisticsScreen`, siguiendo todos los requisitos y la estética de "PomodoroManuscriptApp".
+¡Entendido! Me enfocaré rigurosamente en la "NOTA ESPECIAL Y ESTRICTA DEL USUARIO". Esto significa que no generaré una `StatisticsScreen` completa con UI, sino que me centraré en los puntos solicitados: `WelcomeScreen` completa, `main.dart` con rutas y lógica de primer inicio, y la integración del saludo personalizado en `PomodoroScreen`. Las pantallas `SettingsScreen` y `StatisticsScreen` se proporcionarán con una implementación mínima para que las rutas funcionen.
 
-Este código se enfoca exclusivamente en la `StatisticsScreen` y no incluye las correcciones o implementaciones mencionadas en la "NOTA ESPECIAL Y ESTRICTA DEL USUARIO" para otras pantallas (`PomodoroScreen`, `WelcomeScreen`, `main.dart`), ya que esas son responsabilidades de sus respectivos archivos y no de `StatisticsScreen`.
+Para que el código compile y funcione correctamente, necesitarás añadir la dependencia `shared_preferences` en tu archivo `pubspec.yaml`:
 
-// statistics_screen.dart
+dependencies:
+  flutter:
+    sdk: flutter
+  shared_preferences: ^2.2.0 # Asegúrate de usar la última versión estable
+
+También, para la estética de manuscrito, he usado una fuente genérica `'Cursive'` en el `textTheme` de `main.dart`. Para una experiencia real, deberías añadir una fuente personalizada a tu proyecto (por ejemplo, en la carpeta `assets/fonts/`) y declararla en `pubspec.yaml`.
+
+A continuación, se presenta el código completo y funcional para los archivos solicitados:
+
+---
+
+### 1. `main.dart`
+
+Este archivo inicializa la aplicación, configura el tema Material 3, las rutas nombradas y la lógica para determinar si es el primer inicio de la app.
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pomodoro_manuscript_app/welcome_screen.dart';
+import 'package:pomodoro_manuscript_app/pomodoro_screen.dart';
+import 'package:pomodoro_manuscript_app/settings_screen.dart';
+import 'package:pomodoro_manuscript_app/statistics_screen.dart';
 
-class StatisticsScreen extends StatelessWidget {
-  const StatisticsScreen({super.key});
+void main() async {
+  // Asegura que los widgets de Flutter estén inicializados antes de usar SharedPreferences
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Obtiene una instancia de SharedPreferences
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  // Verifica si la app ha sido lanzada antes. Por defecto, es false.
+  bool hasLaunchedBefore = prefs.getBool('hasLaunchedBefore') ?? false;
+
+  String initialRoute;
+  if (hasLaunchedBefore) {
+    // Si ya se lanzó antes, va directamente a la pantalla de Pomodoro
+    initialRoute = '/pomodoro';
+  } else {
+    // Si es la primera vez, va a la pantalla de bienvenida
+    initialRoute = '/welcome';
+  }
+
+  runApp(MyApp(initialRoute: initialRoute));
+}
+
+class MyApp extends StatelessWidget {
+  final String initialRoute;
+
+  const MyApp({Key? key, required this.initialRoute}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Datos de ejemplo para la demostración de la UI
-    final int totalPomodoros = 125;
-    final String totalFocusTime = "52h 30m";
-    final String totalBreakTime = "17h 15m";
-    final double avgPomodorosPerDay = 3.5;
-    final int currentStreak = 7; // Días consecutivos usando la app
-
-    // Definición de estilos de texto para simular la estética de manuscrito.
-    // Idealmente, estos estilos serían parte del ThemeData global de la aplicación.
-    final TextStyle manuscriptBaseTextStyle = TextStyle(
-      fontFamily: 'serif', // Usa una fuente genérica serif para simular Times New Roman
-      color: Theme.of(context).colorScheme.onSurface, // Color de texto oscuro para contraste
-      fontSize: 16,
-      height: 1.5, // Altura de línea para mejorar la legibilidad, como en un manuscrito
-    );
-
-    final TextStyle manuscriptTitleStyle = manuscriptBaseTextStyle.copyWith(
-      fontSize: 24,
-      fontWeight: FontWeight.bold,
-      color: Theme.of(context).colorScheme.onSurface,
-    );
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5DC), // Color principal: papel beige
-      appBar: AppBar(
-        title: Text(
-          'Estadísticas de Productividad',
-          style: manuscriptTitleStyle.copyWith(fontSize: 20), // Título del AppBar con estilo manuscrito
+    return MaterialApp(
+      title: 'Pomodoro Manuscript App',
+      theme: ThemeData(
+        // Configuración de ColorScheme.fromSeed para Material Design 3
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFF5F5DC), // Color principal: beige
+          primary: const Color(0xFFF5F5DC), // Fondo principal (papel beige)
+          onPrimary: const Color(0xFF8B4513), // Texto/iconos sobre el color primario (tinta marrón)
+          secondary: const Color(0xFF8B4513), // Color de acento (marrón)
+          onSecondary: const Color(0xFFF5F5DC), // Texto/iconos sobre el color secundario
+          surface: const Color(0xFFF5F5DC), // Superficies de componentes (tarjetas, diálogos)
+          onSurface: const Color(0xFF8B4513), // Texto/iconos sobre superficies
+          background: const Color(0xFFF5F5DC), // Fondo general de la pantalla
+          onBackground: const Color(0xFF8B4513), // Texto/iconos sobre el fondo general
+          error: Colors.red.shade700, // Color para errores
+          onError: Colors.white, // Texto sobre color de error
         ),
-        backgroundColor: const Color(0xFFF5F5DC), // Fondo del AppBar a juego con el papel
-        foregroundColor: Theme.of(context).colorScheme.onSurface, // Color del texto del AppBar
-        elevation: 0, // Sin sombra para un efecto más plano y de papel
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Tarjeta para "Pomodoros Completados"
-            _buildStatisticCard(
-              context,
-              title: 'Pomodoros Completados',
-              value: '$totalPomodoros',
-              icon: Icons.check_circle_outline,
-              manuscriptBaseTextStyle: manuscriptBaseTextStyle,
-              manuscriptTitleStyle: manuscriptTitleStyle,
-            ),
-            const SizedBox(height: 16),
-            // Tarjeta para "Tiempo Total de Enfoque"
-            _buildStatisticCard(
-              context,
-              title: 'Tiempo Total de Enfoque',
-              value: totalFocusTime,
-              icon: Icons.timer,
-              manuscriptBaseTextStyle: manuscriptBaseTextStyle,
-              manuscriptTitleStyle: manuscriptTitleStyle,
-            ),
-            const SizedBox(height: 16),
-            // Tarjeta para "Tiempo Total de Descanso"
-            _buildStatisticCard(
-              context,
-              title: 'Tiempo Total de Descanso',
-              value: totalBreakTime,
-              icon: Icons.free_breakfast,
-              manuscriptBaseTextStyle: manuscriptBaseTextStyle,
-              manuscriptTitleStyle: manuscriptTitleStyle,
-            ),
-            const SizedBox(height: 16),
-            // Tarjeta para "Promedio Diario de Pomodoros"
-            _buildStatisticCard(
-              context,
-              title: 'Promedio Diario de Pomodoros',
-              value: avgPomodorosPerDay.toStringAsFixed(1),
-              icon: Icons.calendar_today,
-              manuscriptBaseTextStyle: manuscriptBaseTextStyle,
-              manuscriptTitleStyle: manuscriptTitleStyle,
-            ),
-            const SizedBox(height: 16),
-            // Tarjeta para "Racha Actual"
-            _buildStatisticCard(
-              context,
-              title: 'Racha Actual',
-              value: '$currentStreak días',
-              icon: Icons.local_fire_department,
-              manuscriptBaseTextStyle: manuscriptBaseTextStyle,
-              manuscriptTitleStyle: manuscriptTitleStyle,
-            ),
-            const SizedBox(height: 32),
-            // Botón para restablecer estadísticas (funcionalidad de ejemplo)
-            ElevatedButton.icon(
-              onPressed: () {
-                // Lógica para restablecer las estadísticas (no implementada aquí)
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Funcionalidad de restablecer estadísticas no implementada.',
-                      style: manuscriptBaseTextStyle.copyWith(color: Theme.of(context).colorScheme.onError),
-                    ),
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                  ),
-                );
-              },
-              icon: Icon(Icons.refresh, color: Theme.of(context).colorScheme.onError),
-              label: Text(
-                'Restablecer Estadísticas',
-                style: manuscriptBaseTextStyle.copyWith(color: Theme.of(context).colorScheme.onError, fontWeight: FontWeight.bold),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.errorContainer, // Color de fondo para una acción de advertencia
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: Theme.of(context).colorScheme.error, width: 1), // Borde para enfatizar la acción
-                ),
-                elevation: 2, // Sombra sutil
-              ),
-            ),
-          ],
+        useMaterial3: true,
+        // Tema de texto para la estética de manuscrito
+        textTheme: const TextTheme(
+          displayLarge: TextStyle(fontFamily: 'Cursive', color: Color(0xFF8B4513)),
+          displayMedium: TextStyle(fontFamily: 'Cursive', color: Color(0xFF8B4513)),
+          displaySmall: TextStyle(fontFamily: 'Cursive', color: Color(0xFF8B4513)),
+          headlineLarge: TextStyle(fontFamily: 'Cursive', color: Color(0xFF8B4513)),
+          headlineMedium: TextStyle(fontFamily: 'Cursive', color: Color(0xFF8B4513)),
+          headlineSmall: TextStyle(fontFamily: 'Cursive', color: Color(0xFF8B4513)),
+          titleLarge: TextStyle(fontFamily: 'Cursive', color: Color(0xFF8B4513)),
+          titleMedium: TextStyle(fontFamily: 'Cursive', color: Color(0xFF8B4513)),
+          titleSmall: TextStyle(fontFamily: 'Cursive', color: Color(0xFF8B4513)),
+          bodyLarge: TextStyle(fontFamily: 'Cursive', color: Color(0xFF8B4513)),
+          bodyMedium: TextStyle(fontFamily: 'Cursive', color: Color(0xFF8B4513)),
+          bodySmall: TextStyle(fontFamily: 'Cursive', color: Color(0xFF8B4513)),
+          labelLarge: TextStyle(fontFamily: 'Cursive', color: Color(0xFFF5F5DC)), // Texto de botones
+          labelMedium: TextStyle(fontFamily: 'Cursive', color: Color(0xFFF5F5DC)),
+          labelSmall: TextStyle(fontFamily: 'Cursive', color: Color(0xFFF5F5DC)),
         ),
-      ),
-    );
-  }
-
-  // Widget auxiliar para construir cada tarjeta de estadística
-  Widget _buildStatisticCard(
-    BuildContext context, {
-    required String title,
-    required String value,
-    required IconData icon,
-    required TextStyle manuscriptBaseTextStyle,
-    required TextStyle manuscriptTitleStyle,
-  }) {
-    return Card(
-      color: Theme.of(context).colorScheme.surface, // Fondo de la tarjeta (generalmente blanco o muy claro)
-      elevation: 2, // Sombra sutil para un efecto de papel superpuesto
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant, width: 1), // Borde sutil
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Icon(icon, size: 30, color: const Color(0xFF8B4513)), // Icono con el color accent (marrón)
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: manuscriptTitleStyle.copyWith(fontSize: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style: manuscriptBaseTextStyle.copyWith(fontSize: 22, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+        // Tema para campos de entrada de texto
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xAAFFFFFF), // Blanco ligeramente transparente para el fondo del input
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
+            borderSide: const BorderSide(color: Color(0xFF8B4513), width: 2.0),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8.0),
+            borderSide: const Border
