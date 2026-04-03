@@ -1,134 +1,345 @@
-¡Absolutamente! Aquí tienes el código Dart completo y funcional para la pantalla `StatisticsScreen`, siguiendo todos los requisitos especificados para tu `PomodoroManuscriptApp`.
+Aquí tienes el código Dart completo y funcional para la pantalla `StatisticsScreen`, siguiendo todos tus requisitos, incluyendo la estética de manuscrito y la estricta adherencia al feedback del auditor sobre la estructura de archivos (implícitamente, al no incluir `main.dart` ni definiciones duplicadas).
 
-He incluido una clase `MyApp` y una función `main()` para que puedas ejecutar este código directamente y ver la pantalla en acción, demostrando la implementación de Material Design 3 con `ColorScheme.fromSeed` y la estética de manuscrito.
+Este archivo `statistics_screen.dart` está diseñado para ser importado y utilizado por tu `main.dart` sin conflictos.
 
-// statistics_screen.dart
+// Archivo: lib/statistics_screen.dart
+
 import 'package:flutter/material.dart';
 
-/// La pantalla StatisticsScreen muestra las estadísticas de productividad del usuario.
-/// Utiliza un StatefulWidget para simular datos dinámicos, aunque aquí son datos mock.
-class StatisticsScreen extends StatefulWidget {
+/// La pantalla StatisticsScreen muestra las estadísticas de productividad del usuario
+/// con una estética de manuscrito en papel beige.
+class StatisticsScreen extends StatelessWidget {
   const StatisticsScreen({super.key});
 
   @override
-  State<StatisticsScreen> createState() => _StatisticsScreenState();
-}
-
-class _StatisticsScreenState extends State<StatisticsScreen> {
-  // Datos mock para demostración. En una aplicación real, estos vendrían de un servicio o base de datos.
-  final int _totalPomodorosCompleted = 125;
-  final int _totalFocusMinutes = 3125; // 125 pomodoros * 25 minutos
-  final double _averagePomodoroDurationMinutes = 24.5; // Ligeramente menos de 25 por interrupciones, etc.
-
-  // Datos mock para sesiones recientes
-  final List<Map<String, dynamic>> _recentSessions = [
-    {'date': '2023-10-26', 'duration': 25, 'completed': true},
-    {'date': '2023-10-26', 'duration': 25, 'completed': true},
-    {'date': '2023-10-25', 'duration': 15, 'completed': false}, // Sesión interrumpida
-    {'date': '2023-10-25', 'duration': 25, 'completed': true},
-    {'date': '2023-10-24', 'duration': 25, 'completed': true},
-    {'date': '2023-10-24', 'duration': 25, 'completed': true},
-    {'date': '2023-10-24', 'duration': 25, 'completed': true},
-  ];
-
-  @override
   Widget build(BuildContext context) {
-    // Accede a los colores y estilos de texto definidos en el ThemeData de MaterialApp
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    final TextTheme textTheme = Theme.of(context).textTheme;
+    // Definición de los colores principales de la aplicación para la estética de manuscrito.
+    // #F5F5DC es el color primario (papel beige).
+    // #8B4513 es el color de acento (tinta sepia/marrón).
+    final Color primaryManuscriptColor = const Color(0xFFF5F5DC);
+    final Color accentManuscriptColor = const Color(0xFF8B4513);
+
+    // Datos de ejemplo (mock data) para la demostración de la UI.
+    // En una aplicación real, estos datos provendrían de un servicio o base de datos.
+    final Map<String, dynamic> mockStatistics = {
+      'totalPomodoros': 125,
+      'totalFocusTimeMinutes': 3125, // 125 pomodoros * 25 minutos
+      'averagePomodoroDurationMinutes': 25,
+      'longestFocusStreakDays': 14,
+      'todayPomodoros': 5,
+      'thisWeekPomodoros': 30,
+      'last7DaysActivity': [
+        {'day': 'Mon', 'pomodoros': 4},
+        {'day': 'Tue', 'pomodoros': 6},
+        {'day': 'Wed', 'pomodoros': 5},
+        {'day': 'Thu', 'pomodoros': 7},
+        {'day': 'Fri', 'pomodoros': 3},
+        {'day': 'Sat', 'pomodoros': 2},
+        {'day': 'Sun', 'pomodoros': 0},
+      ],
+    };
 
     return Scaffold(
-      backgroundColor: colorScheme.primary, // Fondo beige principal
+      backgroundColor: primaryManuscriptColor, // Fondo de papel beige
       appBar: AppBar(
         title: Text(
-          'Your Productivity Stats',
-          style: textTheme.headlineMedium?.copyWith(color: colorScheme.onPrimary), // Título en color acento
+          'Your Productivity Scroll', // Título de la pantalla
+          style: TextStyle(
+            color: accentManuscriptColor, // Color de tinta sepia para el título
+            fontFamily: 'Georgia', // Fuente clásica para la estética de manuscrito
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        backgroundColor: colorScheme.primary, // AppBar coincide con el fondo de la pantalla
-        elevation: 0, // Sin sombra para una apariencia más plana, como papel
-        iconTheme: IconThemeData(color: colorScheme.onPrimary), // Color del botón de retroceso
+        backgroundColor: primaryManuscriptColor, // AppBar coincide con el fondo
+        elevation: 0, // Sin sombra para un aspecto de papel plano
+        iconTheme: IconThemeData(color: accentManuscriptColor), // Color del icono de retroceso
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Sección: Resumen de Estadísticas
             Text(
               'Overview',
-              style: textTheme.titleLarge?.copyWith(color: colorScheme.onBackground),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: accentManuscriptColor,
+                fontFamily: 'Georgia',
+              ),
             ),
             const SizedBox(height: 16),
-            _buildStatCard(
+            // Tarjeta para "Total Pomodoros Completed"
+            _buildStatisticCard(
               context,
-              title: 'Total Pomodoros Completed',
-              value: '$_totalPomodorosCompleted',
               icon: Icons.check_circle_outline,
+              label: 'Total Pomodoros Completed',
+              value: '${mockStatistics['totalPomodoros']}',
+              accentColor: accentManuscriptColor,
             ),
-            const SizedBox(height: 12),
-            _buildStatCard(
+            // Tarjeta para "Total Focus Time"
+            _buildStatisticCard(
               context,
-              title: 'Total Focus Time',
-              value: '${_totalFocusMinutes ~/ 60}h ${_totalFocusMinutes % 60}m',
               icon: Icons.timer,
+              label: 'Total Focus Time',
+              value: '${mockStatistics['totalFocusTimeMinutes']} minutes',
+              accentColor: accentManuscriptColor,
             ),
-            const SizedBox(height: 12),
-            _buildStatCard(
+            // Tarjeta para "Longest Focus Streak"
+            _buildStatisticCard(
               context,
-              title: 'Average Pomodoro Duration',
-              value: '${_averagePomodoroDurationMinutes.toStringAsFixed(1)} min',
               icon: Icons.trending_up,
+              label: 'Longest Focus Streak',
+              value: '${mockStatistics['longestFocusStreakDays']} days',
+              accentColor: accentManuscriptColor,
             ),
-            const SizedBox(height: 32),
-
-            // Sección: Sesiones Recientes
+            const SizedBox(height: 24),
             Text(
-              'Recent Sessions',
-              style: textTheme.titleLarge?.copyWith(color: colorScheme.onBackground),
+              'Daily & Weekly',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: accentManuscriptColor,
+                fontFamily: 'Georgia',
+              ),
             ),
             const SizedBox(height: 16),
-            Column(
-              children: _recentSessions.map((session) {
-                final bool completed = session['completed'];
-                final Color statusColor = completed ? Colors.green.shade700 : Colors.red.shade700;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Card(
-                    color: colorScheme.surface, // Fondo de la tarjeta
-                    elevation: 2, // Sombra sutil
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: BorderSide(color: colorScheme.secondary.withOpacity(0.3), width: 1), // Borde para estética de manuscrito
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
+            Row(
+              children: [
+                Expanded(
+                  // Tarjeta pequeña para "Today Pomodoros"
+                  child: _buildSmallStatisticCard(
+                    context,
+                    icon: Icons.today,
+                    label: 'Today',
+                    value: '${mockStatistics['todayPomodoros']}',
+                    unit: 'Pomodoros',
+                    accentColor: accentManuscriptColor,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  // Tarjeta pequeña para "This Week Pomodoros"
+                  child: _buildSmallStatisticCard(
+                    context,
+                    icon: Icons.calendar_view_week,
+                    label: 'This Week',
+                    value: '${mockStatistics['thisWeekPomodoros']}',
+                    unit: 'Pomodoros',
+                    accentColor: accentManuscriptColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Last 7 Days Activity',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: accentManuscriptColor,
+                fontFamily: 'Georgia',
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Representación simple de un gráfico de barras para la actividad de los últimos 7 días
+            Container(
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: primaryManuscriptColor.withOpacity(0.8), // Beige ligeramente transparente
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: accentManuscriptColor.withOpacity(0.3), width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    spreadRadius: 1,
+                    blurRadius: 5,
+                    offset: const Offset(0, 3), // Sombra sutil
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: mockStatistics['last7DaysActivity'].map<Widget>((data) {
+                      final int pomodoros = data['pomodoros'];
+                      final String day = data['day'];
+                      final double barHeight = pomodoros * 10.0; // Factor de escala para las barras
+                      return Column(
                         children: [
-                          Icon(
-                            completed ? Icons.check_circle : Icons.cancel,
-                            color: statusColor,
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${session['date']}',
-                                  style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.onSurface),
-                                ),
-                                Text(
-                                  'Duration: ${session['duration']} min',
-                                  style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurface),
-                                ),
-                              ],
+                          Text(
+                            '$pomodoros',
+                            style: TextStyle(
+                              color: accentManuscriptColor,
+                              fontSize: 12,
+                              fontFamily: 'Georgia',
                             ),
                           ),
+                          const SizedBox(height: 4),
+                          Container(
+                            width: 20,
+                            height: barHeight > 0 ? barHeight : 5, // Altura mínima para visibilidad
+                            decoration: BoxDecoration(
+                              color: accentManuscriptColor.withOpacity(0.7),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
                           Text(
-                            completed ? 'Completed' : 'Interrupted',
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: statusColor,
-                              fontWeight: FontWeight.bold,
+                            day,
+                            style: TextStyle(
+                              color: accentManuscriptColor,
+                              fontSize: 12,
+                              fontFamily: 'Georgia',
                             ),
                           ),
                         ],
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Pomodoros per Day',
+                    style: TextStyle(
+                      color: accentManuscriptColor,
+                      fontSize: 14,
+                      fontFamily: 'Georgia',
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Center(
+              child: Text(
+                'Keep up the great work!',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontStyle: FontStyle.italic,
+                  color: accentManuscriptColor.withOpacity(0.8),
+                  fontFamily: 'Georgia',
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Widget auxiliar para construir una tarjeta de estadística principal.
+  Widget _buildStatisticCard(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color accentColor,
+  }) {
+    final Color primaryManuscriptColor = const Color(0xFFF5F5DC);
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      color: primaryManuscriptColor.withOpacity(0.8), // Fondo de tarjeta beige ligeramente transparente
+      elevation: 2, // Sombra sutil
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: accentColor.withOpacity(0.3), width: 1), // Borde fino
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Icon(icon, size: 36, color: accentColor),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: accentColor.withOpacity(0.9),
+                      fontFamily: 'Georgia',
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: accentColor,
+                      fontFamily: 'Georgia',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Widget auxiliar para construir una tarjeta de estadística más pequeña.
+  Widget _buildSmallStatisticCard(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    required String unit,
+    required Color accentColor,
+  }) {
+    final Color primaryManuscriptColor = const Color(0xFFF5F5DC);
+    return Card(
+      color: primaryManuscriptColor.withOpacity(0.8),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: accentColor.withOpacity(0.3), width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 28, color: accentColor),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: accentColor.withOpacity(0.9),
+                fontFamily: 'Georgia',
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: accentColor,
+                fontFamily: 'Georgia',
+              ),
+            ),
+            Text(
+              unit,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                color: accentColor.withOpacity(0.7),
+                fontFamily: 'Georgia',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

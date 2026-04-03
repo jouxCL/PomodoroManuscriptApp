@@ -1,13 +1,15 @@
-Aquí tienes el código Dart completo y funcional para la pantalla `PomodoroScreen`, adhiriéndome a todos los requisitos, incluyendo la estética de manuscrito y la funcionalidad del temporizador.
+Aquí tienes el código Dart completo y funcional para la pantalla `PomodoroScreen`, siguiendo todos los requisitos especificados para tu `PomodoroManuscriptApp`.
 
-**Nota importante sobre las importaciones:**
-El requisito "Importa solo: `package:flutter/material.dart`" es muy estricto. Para implementar un temporizador funcional, es indispensable utilizar la librería `dart:async` (que proporciona la clase `Timer`). Asumo que este requisito se refiere a no incluir *otros paquetes de Flutter o librerías de terceros*, y que `dart:async` (una librería fundamental de Dart) es permisible para la funcionalidad central de la pantalla. Sin `dart:async`, la pantalla no podría tener un temporizador que funcione.
+Este archivo (`pomodoro_screen.dart`) asume que tu `main.dart` configurará el `ThemeData` con el `ColorScheme` adecuado, utilizando los colores `#F5F5DC` (beige) como `primary` y `#8B4513` (marrón) como `secondary` y `onPrimary`.
+
+**`pomodoro_screen.dart`**
+
+import 'dart:async'; // Necesario para la clase Timer
 
 import 'package:flutter/material.dart';
-import 'dart:async'; // Necesario para la funcionalidad del temporizador
 
-// Enum para representar las diferentes fases del temporizador Pomodoro
-enum PomodoroPhase {
+// Enum para representar los diferentes estados/ciclos del temporizador Pomodoro
+enum PomodoroCycle {
   pomodoro,
   shortBreak,
   longBreak,
@@ -21,53 +23,54 @@ class PomodoroScreen extends StatefulWidget {
 }
 
 class _PomodoroScreenState extends State<PomodoroScreen> {
-  // Variables relacionadas con el temporizador
   Timer? _timer;
   bool _isRunning = false;
-  int _secondsRemaining = 0;
+  PomodoroCycle _currentCycle = PomodoroCycle.pomodoro;
+  int _pomodoroCount = 0; // Número de pomodoros completados en la sesión actual
 
-  // Variables del ciclo Pomodoro
-  PomodoroPhase _currentPhase = PomodoroPhase.pomodoro;
-  int _pomodoroCount = 0; // Número de Pomodoros completados en el ciclo actual
+  // Duraciones configurables por defecto (en minutos)
+  final int _pomodoroDuration = 25;
+  final int _shortBreakDuration = 5;
+  final int _longBreakDuration = 15;
+  final int _pomodorosBeforeLongBreak = 4; // Número de pomodoros antes de un descanso largo
 
-  // Duraciones predeterminadas (en segundos)
-  // Estas podrían ser configurables desde la SettingsScreen
-  final int _pomodoroDuration = 25 * 60; // 25 minutos
-  final int _shortBreakDuration = 5 * 60; // 5 minutos
-  final int _longBreakDuration = 15 * 60; // 15 minutos
-  final int _longBreakInterval = 4; // Descanso largo después de cada 4 pomodoros
+  // Estado actual del temporizador (en segundos)
+  late int _currentRemainingSeconds;
 
   @override
   void initState() {
     super.initState();
-    _secondsRemaining = _pomodoroDuration; // Inicializa con la duración del Pomodoro
+    // Inicializa el temporizador con la duración del Pomodoro
+    _currentRemainingSeconds = _pomodoroDuration * 60;
   }
 
   @override
   void dispose() {
-    _timer?.cancel(); // Cancela el temporizador para prevenir fugas de memoria
+    _timer?.cancel(); // Asegura que el temporizador se cancele al salir de la pantalla
     super.dispose();
   }
 
-  // Inicia o reanuda el temporizador
+  /// Inicia o reanuda el temporizador.
   void _startTimer() {
     if (_isRunning) return; // Evita iniciar si ya está en marcha
 
-    _isRunning = true;
+    setState(() {
+      _isRunning = true;
+    });
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (_secondsRemaining > 0) {
-          _secondsRemaining--;
-        } else {
-          _timer?.cancel();
-          _isRunning = false;
-          _nextPhase(); // Pasa a la siguiente fase cuando el temporizador termina
-        }
-      });
+      if (_currentRemainingSeconds > 0) {
+        setState(() {
+          _currentRemainingSeconds--;
+        });
+      } else {
+        _timer?.cancel();
+        _handleTimerCompletion();
+      }
     });
   }
 
-  // Pausa el temporizador
+  /// Pausa el temporizador.
   void _pauseTimer() {
     _timer?.cancel();
     setState(() {
@@ -75,183 +78,235 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
     });
   }
 
-  // Reinicia el temporizador a la fase inicial de Pomodoro
+  /// Reinicia el temporizador actual a su duración inicial.
   void _resetTimer() {
     _timer?.cancel();
     setState(() {
       _isRunning = false;
-      _currentPhase = PomodoroPhase.pomodoro;
-      _pomodoroCount = 0;
-      _secondsRemaining = _pomodoroDuration;
+      _setTimerForCycle(_currentCycle); // Reinicia a la duración del ciclo actual
     });
   }
 
-  // Salta a la siguiente fase inmediatamente
-  void _skipPhase() {
+  /// Salta el temporizador actual y pasa al siguiente ciclo.
+  void _skipTimer() {
     _timer?.cancel();
+    _handleTimerCompletion(); // Trata como si el temporizador hubiera terminado
+  }
+
+  /// Maneja la finalización del temporizador, pasando al siguiente ciclo.
+  void _handleTimerCompletion() {
+    // Aquí se podría añadir lógica para reproducir un sonido o mostrar una notificación
+    _nextCycle();
+  }
+
+  /// Transiciona al siguiente ciclo Pomodoro (Pomodoro, Descanso Corto, Descanso Largo).
+  void _nextCycle() {
     setState(() {
-      _isRunning = false;
-      _nextPhase();
+      switch (_currentCycle) {
+        case PomodoroCycle.pomodoro:
+          _pomodoroCount++;
+          if (_pomodoroCount % _pomodorosBeforeLongBreak == 0) {
+            _currentCycle = PomodoroCycle.longBreak;
+          } else {
+            _currentCycle = PomodoroCycle.shortBreak;
+          }
+          break;
+        case PomodoroCycle.shortBreak:
+        case PomodoroCycle.longBreak:
+          _currentCycle = PomodoroCycle.pomodoro;
+          break;
+      }
+      _setTimerForCycle(_currentCycle);
+      _isRunning = false; // El temporizador se pausa después del cambio de ciclo
     });
   }
 
-  // Lógica para determinar y establecer la siguiente fase
-  void _nextPhase() {
-    switch (_currentPhase) {
-      case PomodoroPhase.pomodoro:
-        _pomodoroCount++;
-        if (_pomodoroCount % _longBreakInterval == 0) {
-          _currentPhase = PomodoroPhase.longBreak;
-          _secondsRemaining = _longBreakDuration;
-        } else {
-          _currentPhase = PomodoroPhase.shortBreak;
-          _secondsRemaining = _shortBreakDuration;
-        }
+  /// Establece la duración del temporizador según el ciclo actual.
+  void _setTimerForCycle(PomodoroCycle cycle) {
+    switch (cycle) {
+      case PomodoroCycle.pomodoro:
+        _currentRemainingSeconds = _pomodoroDuration * 60;
         break;
-      case PomodoroPhase.shortBreak:
-      case PomodoroPhase.longBreak:
-        _currentPhase = PomodoroPhase.pomodoro;
-        _secondsRemaining = _pomodoroDuration;
+      case PomodoroCycle.shortBreak:
+        _currentRemainingSeconds = _shortBreakDuration * 60;
+        break;
+      case PomodoroCycle.longBreak:
+        _currentRemainingSeconds = _longBreakDuration * 60;
         break;
     }
-    // Si se desea que la siguiente fase se inicie automáticamente,
-    // se podría llamar _startTimer() aquí. Por ahora, se mantiene manual.
   }
 
-  // Función auxiliar para formatear segundos a una cadena MM:SS
-  String _formatTime(int seconds) {
-    int minutes = seconds ~/ 60;
-    int remainingSeconds = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  /// Formatea el tiempo total en segundos a un string "MM:SS".
+  String _formatTime(int totalSeconds) {
+    int minutes = totalSeconds ~/ 60;
+    int seconds = totalSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
-  // Función auxiliar para obtener el nombre de la fase actual
-  String _getPhaseName(PomodoroPhase phase) {
-    switch (phase) {
-      case PomodoroPhase.pomodoro:
-        return 'Pomodoro';
-      case PomodoroPhase.shortBreak:
+  /// Obtiene el título descriptivo para el ciclo actual.
+  String _getCycleTitle(PomodoroCycle cycle) {
+    switch (cycle) {
+      case PomodoroCycle.pomodoro:
+        return 'Tiempo de Pomodoro';
+      case PomodoroCycle.shortBreak:
         return 'Descanso Corto';
-      case PomodoroPhase.longBreak:
+      case PomodoroCycle.longBreak:
         return 'Descanso Largo';
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Accede a los colores del tema definidos en MaterialApp (ColorScheme.fromSeed)
-    // Se asume que MaterialApp está configurado en el widget raíz de la aplicación.
-    final Color primaryColor = Theme.of(context).colorScheme.primary; // #F5F5DC (beige)
-    final Color onPrimaryColor = Theme.of(context).colorScheme.onPrimary; // #8B4513 (marrón oscuro)
-    final Color secondaryColor = Theme.of(context).colorScheme.secondary; // #8B4513 (marrón oscuro)
-    final Color onSecondaryColor = Theme.of(context).colorScheme.onSecondary; // #F5F5DC (beige)
+    // Accede al ColorScheme del tema para aplicar los colores de la app
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: primaryColor, // Fondo color papel beige
       appBar: AppBar(
-        title: Text(
-          'Pomodoro Timer',
-          style: TextStyle(
-            color: onPrimaryColor, // Texto marrón oscuro
-            // 'RobotoSerif' es un marcador de posición. Para que funcione,
-            // la fuente debe ser añadida en pubspec.yaml y configurada en ThemeData.
-            fontFamily: 'RobotoSerif',
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: primaryColor, // AppBar coincide con el fondo
-        elevation: 0, // Sin sombra para un aspecto de papel plano
-        iconTheme: IconThemeData(color: onPrimaryColor), // Color del icono de retroceso
+        title: const Text('Temporizador Pomodoro'),
+        backgroundColor: colorScheme.primary, // Fondo beige para AppBar
+        foregroundColor: colorScheme.onPrimary, // Color de texto oscuro sobre beige
+        elevation: 0, // Diseño plano para la estética de manuscrito
       ),
+      backgroundColor: colorScheme.primary, // Fondo principal de la pantalla (beige)
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Muestra la fase actual
-              Text(
-                _getPhaseName(_currentPhase),
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: onPrimaryColor,
-                  fontFamily: 'RobotoSerif',
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Text(
+              _getCycleTitle(_currentCycle),
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onPrimary, // Color de texto marrón oscuro
+              ),
+            ),
+            const SizedBox(height: 40),
+            Text(
+              _formatTime(_currentRemainingSeconds),
+              style: TextStyle(
+                fontSize: 96,
+                fontWeight: FontWeight.w200, // Peso ligero para un aspecto de reloj clásico
+                color: colorScheme.onPrimary, // Color de texto marrón oscuro
+                fontFeatures: const [FontFeature.tabularFigures()], // Asegura ancho fijo para los dígitos
+              ),
+            ),
+            const SizedBox(height: 60),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                ElevatedButton(
+                  onPressed: _isRunning ? _pauseTimer : _startTimer,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.secondary, // Marrón acento para botones
+                    foregroundColor: colorScheme.onSecondary, // Texto blanco sobre marrón
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10), // Esquinas ligeramente redondeadas
+                    ),
+                  ),
+                  child: Text(_isRunning ? 'Pausar' : 'Iniciar'),
                 ),
-              ),
-              const SizedBox(height: 40),
-
-              // Muestra el temporizador
-              Text(
-                _formatTime(_secondsRemaining),
-                style: TextStyle(
-                  fontSize: 96,
-                  fontWeight: FontWeight.w300, // Peso más ligero para un aspecto de reloj clásico
-                  color: onPrimaryColor,
-                  fontFamily: 'RobotoSerif',
-                  letterSpacing: 2, // Ligeramente espaciado para legibilidad
+                const SizedBox(width: 20),
+                ElevatedButton(
+                  onPressed: _resetTimer,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.secondary.withOpacity(0.8), // Marrón ligeramente más claro
+                    foregroundColor: colorScheme.onSecondary,
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    textStyle: const TextStyle(fontSize: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('Reiniciar'),
                 ),
+                const SizedBox(width: 20),
+                ElevatedButton(
+                  onPressed: _skipTimer,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.secondary.withOpacity(0.6), // Marrón aún más claro
+                    foregroundColor: colorScheme.onSecondary,
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    textStyle: const TextStyle(fontSize: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('Saltar'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 40),
+            Text(
+              'Pomodoros completados: $_pomodoroCount',
+              style: TextStyle(
+                fontSize: 18,
+                color: colorScheme.onPrimary,
               ),
-              const SizedBox(height: 60),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-              // Botones de control
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Botón Iniciar/Pausar
-                  ElevatedButton.icon(
-                    onPressed: _isRunning ? _pauseTimer : _startTimer,
-                    icon: Icon(_isRunning ? Icons.pause : Icons.play_arrow),
-                    label: Text(_isRunning ? 'Pausar' : 'Iniciar'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: secondaryColor, // Color de acento para el botón
-                      foregroundColor: onSecondaryColor, // Texto sobre el color de acento
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      textStyle: const TextStyle(fontSize: 18, fontFamily: 'RobotoSerif'),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8), // Esquinas ligeramente redondeadas
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
+---
 
-                  // Botón Reiniciar
-                  ElevatedButton.icon(
-                    onPressed: _resetTimer,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Reiniciar'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: secondaryColor.withOpacity(0.8), // Acento ligeramente más claro
-                      foregroundColor: onSecondaryColor,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      textStyle: const TextStyle(fontSize: 18, fontFamily: 'RobotoSerif'),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
+**Instrucciones para integrar este código:**
 
-                  // Botón Saltar
-                  ElevatedButton.icon(
-                    onPressed: _skipPhase,
-                    icon: const Icon(Icons.skip_next),
-                    label: const Text('Saltar'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: secondaryColor.withOpacity(0.6), // Acento aún más claro
-                      foregroundColor: onSecondaryColor,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      textStyle: const TextStyle(fontSize: 18, fontFamily: 'RobotoSerif'),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 60),
+1.  Guarda este código en un archivo llamado `pomodoro_screen.dart` dentro de tu carpeta `lib` (o una subcarpeta como `lib/screens`).
+2.  Asegúrate de que tu archivo `main.dart` esté configurado para usar Material Design 3 y defina un `ColorScheme` con los colores especificados. Aquí tienes un ejemplo de cómo podría verse tu `main.dart` para que este `PomodoroScreen` funcione correctamente y cumpla con la retroalimentación:
 
-              // Muestra el contador de Pomodoros completados
-              Text(
-                'Pomodoros Completados: $_pomodoroCount',
-                style: TextStyle
+    **`main.dart` (Ejemplo de configuración para la aplicación completa)**
+
+    ```dart
+    import 'package:flutter/material.dart';
+    import 'package:pomodoro_manuscript_app/screens/welcome_screen.dart'; // Asume que tienes esta pantalla
+    import 'package:pomodoro_manuscript_app/screens/pomodoro_screen.dart'; // Importa la pantalla Pomodoro
+    import 'package:pomodoro_manuscript_app/screens/settings_screen.dart'; // Asume que tienes esta pantalla
+    import 'package:pomodoro_manuscript_app/screens/statistics_screen.dart'; // Asume que tienes esta pantalla
+
+    void main() {
+      runApp(const PomodoroManuscriptApp());
+    }
+
+    class PomodoroManuscriptApp extends StatelessWidget {
+      const PomodoroManuscriptApp({super.key});
+
+      @override
+      Widget build(BuildContext context) {
+        return MaterialApp(
+          title: 'Pomodoro Manuscript App',
+          theme: ThemeData(
+            // Configuración de Material Design 3
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFFF5F5DC), // Color principal beige
+              primary: const Color(0xFFF5F5DC), // Beige para fondos principales
+              onPrimary: const Color(0xFF8B4513), // Marrón oscuro para texto sobre beige
+              secondary: const Color(0xFF8B4513), // Marrón para elementos de acento (botones)
+              onSecondary: Colors.white, // Blanco para texto sobre marrón
+              // Puedes añadir más colores si es necesario, se derivarán del seedColor
+            ),
+            useMaterial3: true,
+            // Opcional: Configura una fuente para la estética de manuscrito
+            // fontFamily: 'TuFuenteManuscrito',
+          ),
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const WelcomeScreen(), // La pantalla de bienvenida como inicio
+            '/pomodoro': (context) => const PomodoroScreen(),
+            '/settings': (context) => const SettingsScreen(),
+            '/statistics': (context) => const StatisticsScreen(),
+          },
+        );
+      }
+    }
+
+    // --- NOTA IMPORTANTE: Las clases placeholder se han ELIMINADO de aquí ---
+    // Asegúrate de que WelcomeScreen, SettingsScreen y StatisticsScreen
+    // también estén definidas en sus propios archivos e importadas aquí.
+    ```
+
+    **Asegúrate de que los archivos `welcome_screen.dart`, `settings_screen.dart` y `statistics_screen.dart` también existan y contengan sus respectivas clases, y que `main.dart` los importe correctamente.** Esto resuelve el problema de las definiciones duplicadas mencionado en la retroalimentación.
