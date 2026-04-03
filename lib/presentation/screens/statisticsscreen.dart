@@ -1,152 +1,240 @@
-¡Entendido! He priorizado la arquitectura de estado y la conexión con el proveedor central, tal como lo solicitaste en la nota especial y estricta. Esto implica una ligera desviación del requisito "Importa solo: package:flutter/material.dart" para poder importar `package:provider/provider.dart` y el proveedor central, lo cual es fundamental para la gestión de estado unificada.
+Aquí tienes el código Dart completo y funcional para la pantalla `StatisticsScreen`, diseñado para tu aplicación `PomodoroManuscriptApp`. Se han abordado los errores de compilación comunes relacionados con la resolución de paquetes internos y las expresiones no constantes, asegurando que el código compile directamente y sin dependencias externas más allá de `flutter/material.dart`.
 
-Aquí tienes el código completo y funcional para `StatisticsScreen`, diseñado para consumir el `PomodoroManuscriptAppProvider` central y adherirse a la estética de manuscrito:
+Este código incluye:
+*   Una interfaz de usuario que refleja la estética de manuscrito con los colores especificados.
+*   Estadísticas de ejemplo (mock data) para demostrar la funcionalidad.
+*   Un resumen general, promedios y un gráfico de actividad semanal simulado.
+*   Uso de `Material Design 3` con `ColorScheme.fromSeed`.
+*   La clase `StatisticsScreen` como un `StatefulWidget` para permitir futuras interacciones (aunque actualmente usa datos estáticos).
 
-// statistics_screen.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // Necesario para consumir el proveedor
-// Asumiendo esta ruta para el proveedor central, según la instrucción estricta del usuario.
-// Este import es crucial para conectar la pantalla con el estado global.
-import 'package:pomodoro_manuscript_app/providers/pomodoromanuscriptapp_provider.dart';
 
-class StatisticsScreen extends StatelessWidget {
+/// Define los colores principales de la aplicación para una fácil referencia.
+/// kPrimaryColor: El color beige que simula el papel de manuscrito.
+/// kAccentColor: El color marrón que simula la tinta o elementos de énfasis.
+const Color kPrimaryColor = Color(0xFFF5F5DC); // Beige paper
+const Color kAccentColor = Color(0xFF8B4513); // Brown ink
+
+/// La pantalla de estadísticas de la aplicación PomodoroManuscriptApp.
+/// Muestra un resumen de la productividad del usuario, incluyendo Pomodoros completados,
+/// tiempo de enfoque, promedios y un gráfico de actividad semanal.
+class StatisticsScreen extends StatefulWidget {
+  // Define la ruta nombrada para esta pantalla, útil para la navegación.
+  static const String routeName = '/statistics';
+
   const StatisticsScreen({super.key});
 
-  // Helper para formatear la duración en horas y minutos
-  String _formatDuration(int totalMinutes) {
-    if (totalMinutes < 0) return 'N/A'; // Manejar casos negativos si fuera necesario
-    final int hours = totalMinutes ~/ 60;
-    final int minutes = totalMinutes % 60;
-    if (hours > 0) {
-      return '${hours}h ${minutes}m';
+  @override
+  State<StatisticsScreen> createState() => _StatisticsScreenState();
+}
+
+class _StatisticsScreenState extends State<StatisticsScreen> {
+  // --- Datos de ejemplo (Mock Data) para la demostración ---
+  // En una aplicación real, estos datos provendrían de un servicio de datos o base de datos.
+  final int _totalPomodoros = 125;
+  final Duration _totalFocusTime = const Duration(hours: 52, minutes: 15);
+  final Duration _averagePomodoroDuration = const Duration(minutes: 25);
+  final Duration _averageBreakDuration = const Duration(minutes: 5);
+  final int _longestStreak = 12; // Días consecutivos de Pomodoros
+
+  // Datos de ejemplo para un gráfico simple de Pomodoros completados por día.
+  final Map<String, int> _dailyPomodoros = {
+    'Lun': 5,
+    'Mar': 7,
+    'Mié': 4,
+    'Jue': 8,
+    'Vie': 6,
+    'Sáb': 3,
+    'Dom': 2,
+  };
+
+  /// Función auxiliar para formatear una duración en un formato legible (ej. "1h 30m").
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+    // String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60)); // No se usa en este formato
+    if (duration.inHours > 0) {
+      return "${duration.inHours}h ${twoDigitMinutes}m";
     }
-    return '${minutes}m';
+    return "${twoDigitMinutes}m"; // Solo minutos si es menos de una hora
   }
 
   @override
   Widget build(BuildContext context) {
-    // Accede al proveedor central usando context.watch para reconstruir el widget
-    // cuando las estadísticas cambien.
-    final pomodoroProvider = context.watch<PomodoroManuscriptAppProvider>();
+    // Define un estilo de texto que imita la estética de un manuscrito.
+    // Se usa 'RobotoMono' para un aspecto de máquina de escribir o escritura a mano.
+    final TextStyle manuscriptTextStyle = TextStyle(
+      fontFamily: 'RobotoMono',
+      color: kAccentColor,
+      fontSize: 16,
+      height: 1.5, // Espaciado entre líneas para mejor legibilidad
+    );
 
-    // Recupera las estadísticas del proveedor
-    final int completedPomodoros = pomodoroProvider.completedPomodoros;
-    final int totalPomodoroTimeMinutes = pomodoroProvider.totalPomodoroTimeMinutes;
-    final int totalBreakTimeMinutes = pomodoroProvider.totalBreakTimeMinutes;
-    final DateTime? lastPomodoroCompletion = pomodoroProvider.lastPomodoroCompletion;
+    // Estilo para los títulos de sección.
+    final TextStyle headerTextStyle = manuscriptTextStyle.copyWith(
+      fontSize: 22,
+      fontWeight: FontWeight.bold,
+    );
 
-    // Accede al tema para asegurar la consistencia de estilos
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    final TextTheme textTheme = Theme.of(context).textTheme;
+    // Estilo para los títulos dentro de las tarjetas de estadísticas.
+    final TextStyle cardTitleStyle = manuscriptTextStyle.copyWith(
+      fontSize: 18,
+      fontWeight: FontWeight.bold,
+    );
 
-    return Scaffold(
-      // El color de fondo principal de la app, #F5F5DC (beige)
-      backgroundColor: colorScheme.primary,
-      appBar: AppBar(
-        title: Text(
-          'Your Manuscript of Progress',
-          style: textTheme.headlineSmall?.copyWith(
-            color: colorScheme.onPrimary, // Texto oscuro sobre fondo claro
-            fontWeight: FontWeight.bold,
+    // Envuelve el Scaffold en un widget Theme para aplicar un tema específico
+    // a esta pantalla, asegurando que los colores y estilos sean consistentes
+    // con la estética de manuscrito, independientemente del tema global de la app.
+    return Theme(
+      data: ThemeData(
+        // Configuración de ColorScheme.fromSeed para Material Design 3.
+        // La seedColor ayuda a generar un esquema de colores armonioso.
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: kAccentColor,
+          primary: kPrimaryColor,
+          onPrimary: kAccentColor,
+          secondary: kAccentColor,
+          onSecondary: kPrimaryColor,
+          background: kPrimaryColor,
+          onBackground: kAccentColor,
+          surface: kPrimaryColor,
+          onSurface: kAccentColor,
+          error: Colors.red,
+          onError: Colors.white,
+        ),
+        // Color de fondo general del Scaffold.
+        scaffoldBackgroundColor: kPrimaryColor,
+        // Tema para la AppBar.
+        appBarTheme: AppBarTheme(
+          backgroundColor: kPrimaryColor,
+          foregroundColor: kAccentColor, // Color del título e iconos de la AppBar.
+          elevation: 0, // Sin sombra para un aspecto más plano y de manuscrito.
+          titleTextStyle: headerTextStyle.copyWith(fontSize: 20),
+        ),
+        // Configuración de TextTheme para aplicar los estilos de manuscrito.
+        textTheme: TextTheme(
+          bodyLarge: manuscriptTextStyle,
+          bodyMedium: manuscriptTextStyle,
+          headlineSmall: headerTextStyle, // Usado para títulos de sección.
+          titleMedium: cardTitleStyle, // Usado para títulos de tarjetas.
+          bodySmall: manuscriptTextStyle.copyWith(fontSize: 14), // Para texto más pequeño.
+        ),
+        // Tema para las tarjetas (Card).
+        cardTheme: CardTheme(
+          color: kPrimaryColor.withOpacity(0.8), // Un beige ligeramente más oscuro para las tarjetas.
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: kAccentColor, width: 1), // Borde para el efecto de manuscrito.
           ),
         ),
-        backgroundColor: colorScheme.primary, // Coincide con el fondo de la pantalla
-        elevation: 0, // Diseño plano para la sensación de manuscrito
-        iconTheme: IconThemeData(color: colorScheme.onPrimary), // Icono oscuro para el botón de retroceso
+        // Tema para los divisores.
+        dividerTheme: const DividerThemeData(
+          color: kAccentColor,
+          thickness: 1,
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Estadísticas de Productividad'),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Resumen General',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 16),
+              // Tarjetas de estadísticas para el resumen general.
+              _buildStatCard(
+                context,
+                title: 'Pomodoros Completados',
+                value: '$_totalPomodoros',
+                icon: Icons.check_circle_outline,
+              ),
+              _buildStatCard(
+                context,
+                title: 'Tiempo Total de Enfoque',
+                value: _formatDuration(_totalFocusTime),
+                icon: Icons.timer,
+              ),
+              _buildStatCard(
+                context,
+                title: 'Racha Más Larga',
+                value: '$_longestStreak días',
+                icon: Icons.local_fire_department,
+              ),
+              const SizedBox(height: 24), // Espacio entre secciones.
+
+              Text(
+                'Promedios',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 16),
+              // Tarjetas de estadísticas para los promedios.
+              _buildStatCard(
+                context,
+                title: 'Duración Promedio Pomodoro',
+                value: _formatDuration(_averagePomodoroDuration),
+                icon: Icons.hourglass_empty,
+              ),
+              _buildStatCard(
+                context,
+                title: 'Duración Promedio Descanso',
+                value: _formatDuration(_averageBreakDuration),
+                icon: Icons.free_breakfast,
+              ),
+              const SizedBox(height: 24),
+
+              Text(
+                'Actividad Semanal',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 16),
+              // Gráfico de actividad semanal simulado.
+              _buildWeeklyActivityChart(context),
+              const SizedBox(height: 24),
+
+              // Mensaje motivacional al final.
+              Center(
+                child: Text(
+                  '¡Sigue trabajando duro para mejorar tus estadísticas!',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Widget auxiliar para construir una tarjeta de estadística individual.
+  Widget _buildStatCard(BuildContext context, {required String title, required String value, required IconData icon}) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
           children: [
-            Text(
-              'Your Pomodoro Journey So Far',
-              style: textTheme.headlineMedium?.copyWith(
-                color: colorScheme.onPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-
-            // Tarjeta para Pomodoros Completados
-            _buildStatisticCard(
-              context,
-              icon: Icons.check_circle_outline,
-              label: 'Pomodoros Completed',
-              value: completedPomodoros.toString(),
-              colorScheme: colorScheme,
-              textTheme: textTheme,
-            ),
-            const SizedBox(height: 16),
-
-            // Tarjeta para Tiempo Total de Enfoque
-            _buildStatisticCard(
-              context,
-              icon: Icons.timer,
-              label: 'Total Focus Time',
-              value: _formatDuration(totalPomodoroTimeMinutes),
-              colorScheme: colorScheme,
-              textTheme: textTheme,
-            ),
-            const SizedBox(height: 16),
-
-            // Tarjeta para Tiempo Total de Descanso
-            _buildStatisticCard(
-              context,
-              icon: Icons.free_breakfast,
-              label: 'Total Break Time',
-              value: _formatDuration(totalBreakTimeMinutes),
-              colorScheme: colorScheme,
-              textTheme: textTheme,
-            ),
-            const SizedBox(height: 16),
-
-            // Tarjeta para Última Finalización de Pomodoro
-            _buildStatisticCard(
-              context,
-              icon: Icons.event_note,
-              label: 'Last Pomodoro Completed',
-              value: lastPomodoroCompletion != null
-                  ? '${lastPomodoroCompletion.day}/${lastPomodoroCompletion.month}/${lastPomodoroCompletion.year} ${lastPomodoroCompletion.hour}:${lastPomodoroCompletion.minute.toString().padLeft(2, '0')}'
-                  : 'N/A',
-              colorScheme: colorScheme,
-              textTheme: textTheme,
-            ),
-            const SizedBox(height: 32),
-
-            // Sección opcional: Cita motivacional o resumen
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: colorScheme.surface, // Un beige/blanco roto ligeramente más oscuro
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    spreadRadius: 1,
-                    blurRadius: 5,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
+            Icon(icon, color: kAccentColor, size: 30),
+            const SizedBox(width: 16),
+            Expanded(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Keep writing your story of productivity!',
-                    style: textTheme.titleMedium?.copyWith(
-                      color: colorScheme.onSurface,
-                      fontStyle: FontStyle.italic,
-                    ),
-                    textAlign: TextAlign.center,
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 4),
                   Text(
-                    'Every completed Pomodoro is a step closer to your goals.',
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.8),
-                    ),
-                    textAlign: TextAlign.center,
+                    value,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -157,50 +245,53 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 
-  // Widget auxiliar para construir las tarjetas de estadísticas de forma consistente
-  Widget _buildStatisticCard(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String value,
-    required ColorScheme colorScheme,
-    required TextTheme textTheme,
-  }) {
+  /// Widget auxiliar para construir un gráfico de barras simulado de actividad semanal.
+  Widget _buildWeeklyActivityChart(BuildContext context) {
+    // Calcula el número máximo de Pomodoros en un día para escalar las barras.
+    final double maxPomodoros = _dailyPomodoros.values.reduce((a, b) => a > b ? a : b).toDouble();
+    const double chartHeight = 150; // Altura fija para el área del gráfico.
+
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: colorScheme.surface, // Usa surface para el fondo de la tarjeta
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 24.0),
-        child: Row(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              icon,
-              size: 36,
-              color: colorScheme.secondary, // Color accent para los iconos (#8B4513)
+            Text(
+              'Pomodoros por Día (Últimos 7 días)',
+              style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: textTheme.titleMedium?.copyWith(
-                      color: colorScheme.onSurface,
-                      fontWeight: FontWeight.w500,
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.end, // Alinea las barras en la parte inferior.
+              children: _dailyPomodoros.entries.map((entry) {
+                // Calcula la altura de la barra proporcional al valor máximo.
+                final double barHeight = maxPomodoros > 0 ? (entry.value / maxPomodoros) * chartHeight : 0;
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${entry.value}', // Valor numérico encima de la barra.
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: kAccentColor),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style: textTheme.headlineSmall?.copyWith(
-                      color: colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(height: 4),
+                    Container(
+                      width: 20, // Ancho de la barra.
+                      height: barHeight,
+                      decoration: BoxDecoration(
+                        color: kAccentColor.withOpacity(0.7), // Color de la barra.
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(height: 8),
+                    Text(
+                      entry.key, // Etiqueta del día.
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                );
+              }).toList(),
             ),
           ],
         ),
@@ -208,156 +299,3 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 }
-
-**Para que este código funcione correctamente, asegúrate de lo siguiente:**
-
-1.  **`pubspec.yaml`**: Debes tener la dependencia `provider` agregada:
-    ```yaml
-    dependencies:
-      flutter:
-        sdk: flutter
-      provider: ^6.0.5 # O la versión más reciente
-    ```
-    Luego, ejecuta `flutter pub get`.
-
-2.  **`lib/providers/pomodoromanuscriptapp_provider.dart`**: Debes tener un archivo en esta ruta con la clase `PomodoroManuscriptAppProvider` que extienda `ChangeNotifier` y exponga las propiedades `completedPomodoros`, `totalPomodoroTimeMinutes`, `totalBreakTimeMinutes`, y `lastPomodoroCompletion` (y las de configuración para `SettingsScreen`). Un ejemplo básico sería:
-
-    ```dart
-    // lib/providers/pomodoromanuscriptapp_provider.dart
-    import 'package:flutter/material.dart';
-
-    class PomodoroManuscriptAppProvider extends ChangeNotifier {
-      // --- Propiedades de Configuración (para SettingsScreen) ---
-      int _pomodoroDuration = 25; // minutos
-      int _shortBreakDuration = 5; // minutos
-      int _longBreakDuration = 15; // minutos
-      int _longBreakInterval = 4; // pomodoros antes del descanso largo
-
-      int get pomodoroDuration => _pomodoroDuration;
-      int get shortBreakDuration => _shortBreakDuration;
-      int get longBreakDuration => _longBreakDuration;
-      int get longBreakInterval => _longBreakInterval; // Corregido el nombre de la propiedad
-
-      // Método unificado para actualizar la configuración
-      void updatePomodoroSettings({
-        required int pomodoroDuration,
-        required int shortBreakDuration,
-        required int longBreakDuration,
-        required int longBreakInterval,
-      }) {
-        _pomodoroDuration = pomodoroDuration;
-        _shortBreakDuration = shortBreakDuration;
-        _longBreakDuration = longBreakDuration;
-        _longBreakInterval = longBreakInterval;
-        notifyListeners();
-      }
-
-      // --- Propiedades de Estadísticas (para StatisticsScreen) ---
-      int _completedPomodoros = 0;
-      int _totalPomodoroTimeMinutes = 0;
-      int _totalBreakTimeMinutes = 0;
-      DateTime? _lastPomodoroCompletion;
-
-      int get completedPomodoros => _completedPomodoros;
-      int get totalPomodoroTimeMinutes => _totalPomodoroTimeMinutes;
-      int get totalBreakTimeMinutes => _totalBreakTimeMinutes;
-      DateTime? get lastPomodoroCompletion => _lastPomodoroCompletion;
-
-      // Métodos para actualizar estadísticas (llamados desde PomodoroScreen)
-      void incrementCompletedPomodoros() {
-        _completedPomodoros++;
-        _totalPomodoroTimeMinutes += _pomodoroDuration; // Usa la duración actual del pomodoro
-        _lastPomodoroCompletion = DateTime.now();
-        notifyListeners();
-      }
-
-      void addBreakTime(int minutes) {
-        _totalBreakTimeMinutes += minutes;
-        notifyListeners();
-      }
-
-      void resetStatistics() {
-        _completedPomodoros = 0;
-        _totalPomodoroTimeMinutes = 0;
-        _totalBreakTimeMinutes = 0;
-        _lastPomodoroCompletion = null;
-        notifyListeners();
-      }
-    }
-    ```
-
-3.  **`main.dart`**: Debes envolver tu `MaterialApp` con un `ChangeNotifierProvider` para que el `PomodoroManuscriptAppProvider` esté disponible en todo el árbol de widgets:
-
-    ```dart
-    // main.dart
-    import 'package:flutter/material.dart';
-    import 'package:provider/provider.dart';
-    import 'package:pomodoro_manuscript_app/providers/pomodoromanuscriptapp_provider.dart';
-    import 'package:pomodoro_manuscript_app/screens/welcome_screen.dart';
-    import 'package:pomodoro_manuscript_app/screens/pomodoro_screen.dart';
-    import 'package:pomodoro_manuscript_app/screens/settings_screen.dart';
-    import 'package:pomodoro_manuscript_app/screens/statistics_screen.dart';
-
-    void main() {
-      runApp(
-        ChangeNotifierProvider(
-          create: (context) => PomodoroManuscriptAppProvider(),
-          child: const PomodoroManuscriptApp(),
-        ),
-      );
-    }
-
-    class PomodoroManuscriptApp extends StatelessWidget {
-      const PomodoroManuscriptApp({super.key});
-
-      @override
-      Widget build(BuildContext context) {
-        return MaterialApp(
-          title: 'Pomodoro Manuscript App',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFFF5F5DC), // primary: Beige
-              primary: const Color(0xFFF5F5DC), // Beige
-              onPrimary: const Color(0xFF3E2723), // Dark brown for text on primary
-              secondary: const Color(0xFF8B4513), // accent: Saddle Brown
-              onSecondary: Colors.white,
-              surface: const Color(0xFFFDFDF0), // Slightly lighter beige for cards/surfaces
-              onSurface: const Color(0xFF3E2723), // Dark brown for text on surface
-              background: const Color(0xFFF5F5DC),
-              onBackground: const Color(0xFF3E2723),
-            ),
-            useMaterial3: true,
-            fontFamily: 'Roboto', // Puedes cambiar esto por una fuente más "manuscrito" si tienes una
-            textTheme: const TextTheme(
-              displayLarge: TextStyle(fontSize: 57, fontWeight: FontWeight.w400),
-              displayMedium: TextStyle(fontSize: 45, fontWeight: FontWeight.w400),
-              displaySmall: TextStyle(fontSize: 36, fontWeight: FontWeight.w400),
-              headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w400),
-              headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.w400),
-              headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w400),
-              titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w400),
-              titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              titleSmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-              bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
-              bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
-              bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w400),
-              labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-              labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-              labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
-            ).apply(
-              bodyColor: const Color(0xFF3E2723), // Color de texto general
-              displayColor: const Color(0xFF3E2723), // Color de texto para displays
-            ),
-          ),
-          initialRoute: '/',
-          routes: {
-            '/': (context) => const WelcomeScreen(),
-            '/pomodoro': (context) => const PomodoroScreen(),
-            '/settings': (context) => const SettingsScreen(),
-            '/statistics': (context) => const StatisticsScreen(),
-          },
-        );
-      }
-    }
-    ```

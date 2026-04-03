@@ -8,17 +8,16 @@ class PomodoroManuscriptAppModel {
   int pomodoroDuration; // Duración de un Pomodoro en minutos (ej. 25)
   int shortBreakDuration; // Duración de un descanso corto en minutos (ej. 5)
   int longBreakDuration; // Duración de un descanso largo en minutos (ej. 15)
-  int
-  pomodorosBeforeLongBreak; // Número de Pomodoros antes de un descanso largo (ej. 4)
+  int pomodorosBeforeLongBreak; // Número de Pomodoros antes de un descanso largo (ej. 4)
   String userName; // Nombre del usuario para el saludo personalizado
 
   // --- Estadísticas de productividad ---
   int totalPomodorosCompleted; // Número total de Pomodoros completados
   int totalTimeFocused; // Tiempo total de enfoque en minutos
   Map<String, int>
-  dailyPomodorosCompleted; // Pomodoros completados por día ("YYYY-MM-DD": count)
+      dailyPomodorosCompleted; // Pomodoros completados por día ("YYYY-MM-DD": count)
   Map<String, int>
-  dailyFocusTime; // Tiempo de enfoque por día en minutos ("YYYY-MM-DD": minutes)
+      dailyFocusTime; // Tiempo de enfoque por día en minutos ("YYYY-MM-DD": minutes)
 
   /// Constructor para el modelo de datos.
   /// Proporciona valores predeterminados si no se especifican.
@@ -32,8 +31,8 @@ class PomodoroManuscriptAppModel {
     this.totalTimeFocused = 0,
     Map<String, int>? dailyPomodorosCompleted,
     Map<String, int>? dailyFocusTime,
-  }) : dailyPomodorosCompleted = dailyPomodorosCompleted ?? {},
-       dailyFocusTime = dailyFocusTime ?? {};
+  })  : dailyPomodorosCompleted = dailyPomodorosCompleted ?? {},
+        dailyFocusTime = dailyFocusTime ?? {};
 
   /// Crea una instancia de [PomodoroManuscriptAppModel] a partir de un mapa JSON.
   /// Se encarga de la deserialización de los datos, incluyendo los mapas de estadísticas.
