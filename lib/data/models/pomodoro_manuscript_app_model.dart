@@ -1,122 +1,170 @@
-import 'package:flutter/material.dart'; // Para la anotación @immutable
+// No se requiere 'package:flutter/material.dart' para los modelos de datos.
+// No se requiere 'dart:async' para los modelos de datos.
 
-/// Representa el estado completo de la aplicación, incluyendo configuraciones,
-/// perfil de usuario y estadísticas de productividad.
-@immutable
-class AppState {
-  final int pomodoroDuration; // Duración de un Pomodoro en minutos
-  final int shortBreakDuration; // Duración de un descanso corto en minutos
-  final int longBreakDuration; // Duración de un descanso largo en minutos
-  final int cyclesBeforeLongBreak; // Número de ciclos de Pomodoro antes de un descanso largo
-  final String userName; // Nombre del usuario para el saludo personalizado
-  final int totalPomodorosCompleted; // Total de Pomodoros completados
-  final int totalFocusTimeSeconds; // Tiempo total de enfoque en segundos
-  final int totalBreaksTaken; // Total de descansos tomados
-  final DateTime? lastSessionDate; // Fecha de la última sesión (puede ser nula)
+/// Enumera las posibles fases del temporizador Pomodoro.
+enum TimerPhase { pomodoro, shortBreak, longBreak, stopped, paused }
 
-  /// Constructor constante para la inmutabilidad.
-  /// Proporciona valores por defecto para todos los campos.
-  const AppState({
-    this.pomodoroDuration = 25,
-    this.shortBreakDuration = 5,
-    this.longBreakDuration = 15,
+/// Representa la configuración configurable del temporizador Pomodoro.
+class PomodoroSettings {
+  final int pomodoroDurationMinutes;
+  final int shortBreakDurationMinutes;
+  final int longBreakDurationMinutes;
+  final int cyclesBeforeLongBreak;
+
+  PomodoroSettings({
+    this.pomodoroDurationMinutes = 25,
+    this.shortBreakDurationMinutes = 5,
+    this.longBreakDurationMinutes = 15,
     this.cyclesBeforeLongBreak = 4,
-    this.userName = 'Usuario',
-    this.totalPomodorosCompleted = 0,
-    this.totalFocusTimeSeconds = 0,
-    this.totalBreaksTaken = 0,
-    this.lastSessionDate,
   });
 
-  /// Crea una nueva instancia de [AppState] a partir de un mapa JSON.
-  /// Utiliza el operador de coalescencia nula (??) para proporcionar valores
-  /// por defecto seguros si una clave no existe en el JSON.
-  factory AppState.fromJson(Map<String, dynamic> json) {
-    return AppState(
-      pomodoroDuration: json['pomodoroDuration'] as int? ?? 25,
-      shortBreakDuration: json['shortBreakDuration'] as int? ?? 5,
-      longBreakDuration: json['longBreakDuration'] as int? ?? 15,
-      cyclesBeforeLongBreak: json['cyclesBeforeLongBreak'] as int? ?? 4,
-      userName: json['userName'] as String? ?? 'Usuario',
-      totalPomodorosCompleted: json['totalPomodorosCompleted'] as int? ?? 0,
-      totalFocusTimeSeconds: json['totalFocusTimeSeconds'] as int? ?? 0,
-      totalBreaksTaken: json['totalBreaksTaken'] as int? ?? 0,
-      lastSessionDate: json['lastSessionDate'] != null
-          ? DateTime.tryParse(json['lastSessionDate'] as String)
-          : null,
+  /// Crea una instancia de [PomodoroSettings] a partir de un mapa JSON.
+  factory PomodoroSettings.fromJson(Map<String, dynamic> json) {
+    return PomodoroSettings(
+      pomodoroDurationMinutes: json['pomodoroDurationMinutes'] as int,
+      shortBreakDurationMinutes: json['shortBreakDurationMinutes'] as int,
+      longBreakDurationMinutes: json['longBreakDurationMinutes'] as int,
+      cyclesBeforeLongBreak: json['cyclesBeforeLongBreak'] as int,
     );
   }
 
-  /// Convierte la instancia actual de [AppState] a un mapa JSON.
+  /// Convierte la instancia de [PomodoroSettings] en un mapa JSON.
   Map<String, dynamic> toJson() {
     return {
-      'pomodoroDuration': pomodoroDuration,
-      'shortBreakDuration': shortBreakDuration,
-      'longBreakDuration': longBreakDuration,
+      'pomodoroDurationMinutes': pomodoroDurationMinutes,
+      'shortBreakDurationMinutes': shortBreakDurationMinutes,
+      'longBreakDurationMinutes': longBreakDurationMinutes,
       'cyclesBeforeLongBreak': cyclesBeforeLongBreak,
-      'userName': userName,
-      'totalPomodorosCompleted': totalPomodorosCompleted,
-      'totalFocusTimeSeconds': totalFocusTimeSeconds,
-      'totalBreaksTaken': totalBreaksTaken,
-      'lastSessionDate': lastSessionDate?.toIso8601String(),
     };
   }
 
-  /// Crea una copia de esta instancia de [AppState] con los valores modificados.
-  AppState copyWith({
-    int? pomodoroDuration,
-    int? shortBreakDuration,
-    int? longBreakDuration,
+  /// Crea una copia de esta instancia de [PomodoroSettings] con valores opcionales actualizados.
+  PomodoroSettings copyWith({
+    int? pomodoroDurationMinutes,
+    int? shortBreakDurationMinutes,
+    int? longBreakDurationMinutes,
     int? cyclesBeforeLongBreak,
-    String? userName,
-    int? totalPomodorosCompleted,
-    int? totalFocusTimeSeconds,
-    int? totalBreaksTaken,
-    DateTime? lastSessionDate,
   }) {
-    return AppState(
-      pomodoroDuration: pomodoroDuration ?? this.pomodoroDuration,
-      shortBreakDuration: shortBreakDuration ?? this.shortBreakDuration,
-      longBreakDuration: longBreakDuration ?? this.longBreakDuration,
-      cyclesBeforeLongBreak: cyclesBeforeLongBreak ?? this.cyclesBeforeLongBreak,
-      userName: userName ?? this.userName,
-      totalPomodorosCompleted: totalPomodorosCompleted ?? this.totalPomodorosCompleted,
-      totalFocusTimeSeconds: totalFocusTimeSeconds ?? this.totalFocusTimeSeconds,
-      totalBreaksTaken: totalBreaksTaken ?? this.totalBreaksTaken,
-      lastSessionDate: lastSessionDate ?? this.lastSessionDate,
+    return PomodoroSettings(
+      pomodoroDurationMinutes:
+          pomodoroDurationMinutes ?? this.pomodoroDurationMinutes,
+      shortBreakDurationMinutes:
+          shortBreakDurationMinutes ?? this.shortBreakDurationMinutes,
+      longBreakDurationMinutes:
+          longBreakDurationMinutes ?? this.longBreakDurationMinutes,
+      cyclesBeforeLongBreak:
+          cyclesBeforeLongBreak ?? this.cyclesBeforeLongBreak,
     );
-  }
-
-  /// Implementación manual de `operator ==` para comparar instancias de [AppState].
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is AppState &&
-        other.pomodoroDuration == pomodoroDuration &&
-        other.shortBreakDuration == shortBreakDuration &&
-        other.longBreakDuration == longBreakDuration &&
-        other.cyclesBeforeLongBreak == cyclesBeforeLongBreak &&
-        other.userName == userName &&
-        other.totalPomodorosCompleted == totalPomodorosCompleted &&
-        other.totalFocusTimeSeconds == totalFocusTimeSeconds &&
-        other.totalBreaksTaken == totalBreaksTaken &&
-        other.lastSessionDate == lastSessionDate;
-  }
-
-  /// Implementación manual de `hashCode` para instancias de [AppState].
-  @override
-  int get hashCode {
-    return pomodoroDuration.hashCode ^
-        shortBreakDuration.hashCode ^
-        longBreakDuration.hashCode ^
-        cyclesBeforeLongBreak.hashCode ^
-        userName.hashCode ^
-        totalPomodorosCompleted.hashCode ^
-        totalFocusTimeSeconds.hashCode ^
-        totalBreaksTaken.hashCode ^
-        lastSessionDate.hashCode;
   }
 }
 
----
+/// Representa las estadísticas de productividad del usuario.
+class ProductivityStats {
+  final int totalPomodorosCompleted;
+  final int totalFocusTimeSeconds;
+  final int totalBreakTimeSeconds;
+
+  ProductivityStats({
+    this.totalPomodorosCompleted = 0,
+    this.totalFocusTimeSeconds = 0,
+    this.totalBreakTimeSeconds = 0,
+  });
+
+  /// Crea una instancia de [ProductivityStats] a partir de un mapa JSON.
+  factory ProductivityStats.fromJson(Map<String, dynamic> json) {
+    return ProductivityStats(
+      totalPomodorosCompleted: json['totalPomodorosCompleted'] as int,
+      totalFocusTimeSeconds: json['totalFocusTimeSeconds'] as int,
+      totalBreakTimeSeconds: json['totalBreakTimeSeconds'] as int,
+    );
+  }
+
+  /// Convierte la instancia de [ProductivityStats] en un mapa JSON.
+  Map<String, dynamic> toJson() {
+    return {
+      'totalPomodorosCompleted': totalPomodorosCompleted,
+      'totalFocusTimeSeconds': totalFocusTimeSeconds,
+      'totalBreakTimeSeconds': totalBreakTimeSeconds,
+    };
+  }
+
+  /// Crea una copia de esta instancia de [ProductivityStats] con valores opcionales actualizados.
+  ProductivityStats copyWith({
+    int? totalPomodorosCompleted,
+    int? totalFocusTimeSeconds,
+    int? totalBreakTimeSeconds,
+  }) {
+    return ProductivityStats(
+      totalPomodorosCompleted:
+          totalPomodorosCompleted ?? this.totalPomodorosCompleted,
+      totalFocusTimeSeconds:
+          totalFocusTimeSeconds ?? this.totalFocusTimeSeconds,
+      totalBreakTimeSeconds:
+          totalBreakTimeSeconds ?? this.totalBreakTimeSeconds,
+    );
+  }
+}
+
+/// Representa el estado global de la aplicación Pomodoro Manuscript.
+/// Este modelo encapsula toda la información necesaria para la aplicación.
+class AppState {
+  final String userName;
+  final PomodoroSettings settings;
+  final ProductivityStats stats;
+  final TimerPhase currentTimerPhase;
+  final int
+  currentPomodoroCycle; // Número de pomodoros completados en el ciclo actual (antes del descanso largo)
+
+  AppState({
+    this.userName = 'Usuario',
+    PomodoroSettings? settings,
+    ProductivityStats? stats,
+    this.currentTimerPhase = TimerPhase.stopped,
+    this.currentPomodoroCycle = 0,
+  }) : settings = settings ?? PomodoroSettings(),
+       stats = stats ?? ProductivityStats();
+
+  /// Crea una instancia de [AppState] a partir de un mapa JSON.
+  factory AppState.fromJson(Map<String, dynamic> json) {
+    return AppState(
+      userName: json['userName'] as String,
+      settings: PomodoroSettings.fromJson(
+        json['settings'] as Map<String, dynamic>,
+      ),
+      stats: ProductivityStats.fromJson(json['stats'] as Map<String, dynamic>),
+      currentTimerPhase: TimerPhase.values.firstWhere(
+        (e) => e.toString() == 'TimerPhase.${json['currentTimerPhase']}',
+        orElse: () => TimerPhase.stopped,
+      ),
+      currentPomodoroCycle: json['currentPomodoroCycle'] as int,
+    );
+  }
+
+  /// Convierte la instancia de [AppState] en un mapa JSON.
+  Map<String, dynamic> toJson() {
+    return {
+      'userName': userName,
+      'settings': settings.toJson(),
+      'stats': stats.toJson(),
+      'currentTimerPhase': currentTimerPhase.toString().split('.').last,
+      'currentPomodoroCycle': currentPomodoroCycle,
+    };
+  }
+
+  /// Crea una copia de esta instancia de [AppState] con valores opcionales actualizados.
+  AppState copyWith({
+    String? userName,
+    PomodoroSettings? settings,
+    ProductivityStats? stats,
+    TimerPhase? currentTimerPhase,
+    int? currentPomodoroCycle,
+  }) {
+    return AppState(
+      userName: userName ?? this.userName,
+      settings: settings ?? this.settings,
+      stats: stats ?? this.stats,
+      currentTimerPhase: currentTimerPhase ?? this.currentTimerPhase,
+      currentPomodoroCycle: currentPomodoroCycle ?? this.currentPomodoroCycle,
+    );
+  }
+}

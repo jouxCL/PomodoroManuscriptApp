@@ -1,43 +1,86 @@
-import 'dart:async'; // Para Future
-import 'package:flutter/material.dart'; // Incluido según la regla, aunque no estrictamente necesario aquí.
+// No se requiere 'package:flutter/material.dart' para los repositorios.
+import 'dart:async'; // Necesario para Future
 
-// Importa los modelos y las fuentes de datos
 import '../models/pomodoro_manuscript_app_model.dart';
 import '../datasources/pomodoro_manuscript_app_local_datasource.dart';
 
-/// Repositorio para gestionar el estado y los datos de la aplicación.
-/// Abstrae las fuentes de datos y proporciona una API limpia para la capa de dominio.
-class PomodoroManuscriptAppRepository {
+/// Interfaz abstracta para el repositorio de la aplicación Pomodoro Manuscript.
+/// Define las operaciones de alto nivel para gestionar el estado de la aplicación.
+abstract class PomodoroManuscriptAppRepository {
+  /// Recupera el estado actual completo de la aplicación.
+  Future<AppState> getAppState();
+
+  /// Actualiza el nombre de usuario.
+  Future<void> updateUserName(String userName);
+
+  /// Actualiza la configuración del temporizador Pomodoro.
+  Future<void> updatePomodoroSettings(PomodoroSettings settings);
+
+  /// Actualiza las estadísticas de productividad.
+  Future<void> updateProductivityStats(ProductivityStats stats);
+
+  /// Actualiza la fase actual del temporizador (Pomodoro, descanso corto, etc.).
+  Future<void> updateTimerPhase(TimerPhase phase);
+
+  /// Actualiza el contador del ciclo Pomodoro actual.
+  Future<void> updateCurrentPomodoroCycle(int cycle);
+
+  /// Restablece el estado de la aplicación a sus valores por defecto.
+  Future<void> resetAppState();
+}
+
+/// Implementación concreta de [PomodoroManuscriptAppRepository] que utiliza una fuente de datos local.
+class PomodoroManuscriptAppRepositoryImpl
+    implements PomodoroManuscriptAppRepository {
   final PomodoroManuscriptAppLocalDataSource localDataSource;
 
-  /// Constructor que requiere una instancia de [PomodoroManuscriptAppLocalDataSource].
-  PomodoroManuscriptAppRepository({required this.localDataSource});
+  PomodoroManuscriptAppRepositoryImpl({required this.localDataSource});
 
-  /// Recupera el estado actual de la aplicación.
-  /// Delega la operación a la fuente de datos local.
+  @override
   Future<AppState> getAppState() async {
-    try {
-      return await localDataSource.getAppState();
-    } catch (e) {
-      // En una aplicación real, se podría registrar el error o devolver un estado por defecto.
-      debugPrint(
-        'Error al obtener el estado de la aplicación desde la fuente de datos local: $e',
-      );
-      return const AppState(); // Devuelve un estado por defecto en caso de error
-    }
+    return await localDataSource.getAppState();
   }
 
-  /// Guarda el estado de la aplicación proporcionado.
-  /// Delega la operación a la fuente de datos local.
-  Future<void> saveAppState(AppState state) async {
-    try {
-      await localDataSource.saveAppState(state);
-    } catch (e) {
-      debugPrint(
-        'Error al guardar el estado de la aplicación en la fuente de datos local: $e',
-      );
-      // Maneja el error, por ejemplo, relanzándolo o registrándolo.
-      rethrow;
-    }
+  @override
+  Future<void> updateUserName(String userName) async {
+    final currentAppState = await localDataSource.getAppState();
+    final updatedAppState = currentAppState.copyWith(userName: userName);
+    await localDataSource.saveAppState(updatedAppState);
+  }
+
+  @override
+  Future<void> updatePomodoroSettings(PomodoroSettings settings) async {
+    final currentAppState = await localDataSource.getAppState();
+    final updatedAppState = currentAppState.copyWith(settings: settings);
+    await localDataSource.saveAppState(updatedAppState);
+  }
+
+  @override
+  Future<void> updateProductivityStats(ProductivityStats stats) async {
+    final currentAppState = await localDataSource.getAppState();
+    final updatedAppState = currentAppState.copyWith(stats: stats);
+    await localDataSource.saveAppState(updatedAppState);
+  }
+
+  @override
+  Future<void> updateTimerPhase(TimerPhase phase) async {
+    final currentAppState = await localDataSource.getAppState();
+    final updatedAppState = currentAppState.copyWith(currentTimerPhase: phase);
+    await localDataSource.saveAppState(updatedAppState);
+  }
+
+  @override
+  Future<void> updateCurrentPomodoroCycle(int cycle) async {
+    final currentAppState = await localDataSource.getAppState();
+    final updatedAppState = currentAppState.copyWith(
+      currentPomodoroCycle: cycle,
+    );
+    await localDataSource.saveAppState(updatedAppState);
+  }
+
+  @override
+  Future<void> resetAppState() async {
+    // Guarda un nuevo estado de aplicación con valores por defecto
+    await localDataSource.saveAppState(AppState());
   }
 }

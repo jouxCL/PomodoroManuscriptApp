@@ -1,41 +1,36 @@
-import 'dart:async'; // Para Future
-import 'package:flutter/material.dart'; // Incluido según la regla, aunque no estrictamente necesario aquí.
+// No se requiere 'package:flutter/material.dart' para los datasources.
+import 'dart:async'; // Necesario para Future
 
-// Importa el modelo de datos
 import '../models/pomodoro_manuscript_app_model.dart';
 
-/// NOTA IMPORTANTE:
-/// Debido a la estricta restricción "Usa solo: package:flutter/material.dart y dart:async",
-/// una solución de almacenamiento local verdaderamente persistente como SharedPreferences
-/// o el acceso al sistema de archivos (dart:io) no puede ser utilizada, ya que requieren
-/// paquetes o librerías adicionales no listadas explícitamente.
-///
-/// Esta implementación proporciona una fuente de datos local EN MEMORIA.
-/// Los datos NO persistirán entre los reinicios de la aplicación.
-///
-/// El modelo `AppState` incluye métodos `fromJson` y `toJson`, pero estos
-/// no son utilizados por esta fuente de datos en memoria debido a las restricciones
-/// de paquetes que impiden el uso de `dart:convert` para serialización/deserialización.
-/// En un escenario del mundo real con persistencia, estos métodos serían cruciales.
-class PomodoroManuscriptAppLocalDataSource {
-  // Almacenamiento en memoria para el AppState
-  AppState _currentAppState = const AppState(); // Inicializa con valores por defecto
+/// Interfaz abstracta para la fuente de datos local de la aplicación Pomodoro Manuscript.
+/// Define los métodos para interactuar con el estado de la aplicación.
+abstract class PomodoroManuscriptAppLocalDataSource {
+  /// Recupera el estado actual de la aplicación.
+  Future<AppState> getAppState();
 
-  PomodoroManuscriptAppLocalDataSource();
-
-  /// Recupera el [AppState] actual del almacenamiento en memoria.
-  Future<AppState> getAppState() async {
-    // Simula un pequeño retraso para una operación asíncrona
-    await Future.delayed(const Duration(milliseconds: 100));
-    return _currentAppState;
-  }
-
-  /// Guarda el [AppState] dado en el almacenamiento en memoria.
-  Future<void> saveAppState(AppState state) async {
-    // Simula un pequeño retraso para una operación asíncrona
-    await Future.delayed(const Duration(milliseconds: 100));
-    _currentAppState = state;
-  }
+  /// Guarda el estado de la aplicación.
+  Future<void> saveAppState(AppState state);
 }
 
----
+/// Implementación en memoria de [PomodoroManuscriptAppLocalDataSource].
+/// Almacena el estado de la aplicación en una variable local, sin persistencia real.
+class PomodoroManuscriptAppLocalDataSourceImpl
+    implements PomodoroManuscriptAppLocalDataSource {
+  // Almacenamiento en memoria
+  AppState _appState = AppState(); // Inicializa con valores por defecto
+
+  @override
+  Future<AppState> getAppState() async {
+    // Simula un pequeño retraso para una operación asíncrona
+    await Future.delayed(const Duration(milliseconds: 50));
+    return _appState;
+  }
+
+  @override
+  Future<void> saveAppState(AppState state) async {
+    // Simula un pequeño retraso para una operación asíncrona
+    await Future.delayed(const Duration(milliseconds: 50));
+    _appState = state;
+  }
+}
