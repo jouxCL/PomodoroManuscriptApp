@@ -1,169 +1,131 @@
-Aquí tienes el código Dart completo y funcional para la pantalla `StatisticsScreen`, diseñado con la estética de manuscrito en papel beige y tipografía que simula Times New Roman, siguiendo todos tus requisitos.
+Aquí tienes el código Dart completo y funcional para la pantalla `StatisticsScreen`, siguiendo todos los requisitos y la estética de "PomodoroManuscriptApp".
 
+Este código se enfoca exclusivamente en la `StatisticsScreen` y no incluye las correcciones o implementaciones mencionadas en la "NOTA ESPECIAL Y ESTRICTA DEL USUARIO" para otras pantallas (`PomodoroScreen`, `WelcomeScreen`, `main.dart`), ya que esas son responsabilidades de sus respectivos archivos y no de `StatisticsScreen`.
+
+// statistics_screen.dart
 import 'package:flutter/material.dart';
 
-/// La pantalla StatisticsScreen muestra las estadísticas de productividad del usuario.
-/// Adopta una estética de manuscrito en papel beige con texto que simula tinta.
 class StatisticsScreen extends StatelessWidget {
   const StatisticsScreen({super.key});
 
-  // --- Datos de ejemplo para las estadísticas ---
-  // En una aplicación real, estos datos provendrían de un sistema de gestión de estado
-  // (como Provider, Riverpod, BLoC) o de una base de datos/preferencias compartidas.
-  // Se inicializarían en 0 y se actualizarían a medida que el usuario usa la app.
-  final int completedPomodoros = 25;
-  final int shortBreaksTaken = 18;
-  final int longBreaksTaken = 6;
-  final Duration totalFocusTime = const Duration(hours: 10, minutes: 25);
-
   @override
   Widget build(BuildContext context) {
-    // --- Definición de colores principales de la aplicación ---
-    final Color primaryColor = const Color(0xFFF5F5DC); // Color beige del papel
-    final Color accentColor = const Color(0xFF8B4513); // Color marrón oscuro, como tinta
+    // Datos de ejemplo para la demostración de la UI
+    final int totalPomodoros = 125;
+    final String totalFocusTime = "52h 30m";
+    final String totalBreakTime = "17h 15m";
+    final double avgPomodorosPerDay = 3.5;
+    final int currentStreak = 7; // Días consecutivos usando la app
 
-    // --- Estilos de texto para la estética de manuscrito ---
-    // Para usar la tipografía "Times New Roman" de forma nativa y consistente,
-    // se debería integrar un archivo de fuente personalizado (.ttf) en el proyecto.
-    // Pasos de ejemplo:
-    // 1. Colocar el archivo de fuente (ej. 'times_new_roman.ttf') en 'assets/fonts/'.
-    // 2. Declarar la fuente en el archivo 'pubspec.yaml' bajo la sección 'flutter':
-    //    flutter:
-    //      fonts:
-    //        - family: Times New Roman
-    //          fonts:
-    //            - asset: assets/fonts/times_new_roman.ttf
-    // 3. Luego, usar: TextStyle(fontFamily: 'Times New Roman', ...)
-    //
-    // Para este ejemplo, usamos 'serif' como un marcador de posición que intentará
-    // usar una fuente serif del sistema o la definida en el tema principal de MaterialApp.
-    final TextStyle manuscriptBaseStyle = TextStyle(
-      fontFamily: 'serif', // Placeholder para Times New Roman o una fuente serif similar
-      color: accentColor,
+    // Definición de estilos de texto para simular la estética de manuscrito.
+    // Idealmente, estos estilos serían parte del ThemeData global de la aplicación.
+    final TextStyle manuscriptBaseTextStyle = TextStyle(
+      fontFamily: 'serif', // Usa una fuente genérica serif para simular Times New Roman
+      color: Theme.of(context).colorScheme.onSurface, // Color de texto oscuro para contraste
       fontSize: 16,
       height: 1.5, // Altura de línea para mejorar la legibilidad, como en un manuscrito
     );
 
-    final TextStyle titleTextStyle = manuscriptBaseStyle.copyWith(
-      fontSize: 28,
+    final TextStyle manuscriptTitleStyle = manuscriptBaseTextStyle.copyWith(
+      fontSize: 24,
       fontWeight: FontWeight.bold,
-      color: accentColor,
+      color: Theme.of(context).colorScheme.onSurface,
     );
-
-    final TextStyle subTitleStyle = manuscriptBaseStyle.copyWith(
-      fontSize: 18,
-      fontStyle: FontStyle.italic,
-      color: accentColor.withOpacity(0.8),
-    );
-
-    final TextStyle statLabelStyle = manuscriptBaseStyle.copyWith(
-      fontSize: 18,
-      fontWeight: FontWeight.w600,
-      color: accentColor.withOpacity(0.9),
-    );
-
-    final TextStyle statValueStyle = manuscriptBaseStyle.copyWith(
-      fontSize: 28, // Tamaño más grande para enfatizar el valor
-      fontWeight: FontWeight.bold,
-      color: accentColor,
-    );
-    // --- Fin de Estilos de Texto ---
 
     return Scaffold(
-      backgroundColor: primaryColor, // Fondo color beige del papel
+      backgroundColor: const Color(0xFFF5F5DC), // Color principal: papel beige
       appBar: AppBar(
         title: Text(
-          'Tus Estadísticas',
-          style: titleTextStyle,
+          'Estadísticas de Productividad',
+          style: manuscriptTitleStyle.copyWith(fontSize: 20), // Título del AppBar con estilo manuscrito
         ),
-        backgroundColor: primaryColor,
-        foregroundColor: accentColor, // Color de tinta para iconos y texto de la AppBar
-        elevation: 0, // AppBar plana para integrarse con la estética del papel
-        centerTitle: true,
+        backgroundColor: const Color(0xFFF5F5DC), // Fondo del AppBar a juego con el papel
+        foregroundColor: Theme.of(context).colorScheme.onSurface, // Color del texto del AppBar
+        elevation: 0, // Sin sombra para un efecto más plano y de papel
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Un vistazo a tu progreso en el Pomodoro',
-              textAlign: TextAlign.center,
-              style: subTitleStyle,
-            ),
-            const SizedBox(height: 30),
             // Tarjeta para "Pomodoros Completados"
-            _buildStatCard(
+            _buildStatisticCard(
               context,
-              label: 'Pomodoros Completados',
-              value: '$completedPomodoros',
-              labelStyle: statLabelStyle,
-              valueStyle: statValueStyle,
-              accentColor: accentColor,
+              title: 'Pomodoros Completados',
+              value: '$totalPomodoros',
+              icon: Icons.check_circle_outline,
+              manuscriptBaseTextStyle: manuscriptBaseTextStyle,
+              manuscriptTitleStyle: manuscriptTitleStyle,
             ),
-            const SizedBox(height: 20),
-            // Tarjeta para "Descansos Cortos Tomados"
-            _buildStatCard(
+            const SizedBox(height: 16),
+            // Tarjeta para "Tiempo Total de Enfoque"
+            _buildStatisticCard(
               context,
-              label: 'Descansos Cortos Tomados',
-              value: '$shortBreaksTaken',
-              labelStyle: statLabelStyle,
-              valueStyle: statValueStyle,
-              accentColor: accentColor,
+              title: 'Tiempo Total de Enfoque',
+              value: totalFocusTime,
+              icon: Icons.timer,
+              manuscriptBaseTextStyle: manuscriptBaseTextStyle,
+              manuscriptTitleStyle: manuscriptTitleStyle,
             ),
-            const SizedBox(height: 20),
-            // Tarjeta para "Descansos Largos Tomados"
-            _buildStatCard(
+            const SizedBox(height: 16),
+            // Tarjeta para "Tiempo Total de Descanso"
+            _buildStatisticCard(
               context,
-              label: 'Descansos Largos Tomados',
-              value: '$longBreaksTaken',
-              labelStyle: statLabelStyle,
-              valueStyle: statValueStyle,
-              accentColor: accentColor,
+              title: 'Tiempo Total de Descanso',
+              value: totalBreakTime,
+              icon: Icons.free_breakfast,
+              manuscriptBaseTextStyle: manuscriptBaseTextStyle,
+              manuscriptTitleStyle: manuscriptTitleStyle,
             ),
-            const SizedBox(height: 20),
-            // Tarjeta para "Tiempo Total Enfocado"
-            _buildStatCard(
+            const SizedBox(height: 16),
+            // Tarjeta para "Promedio Diario de Pomodoros"
+            _buildStatisticCard(
               context,
-              label: 'Tiempo Total Enfocado',
-              value: '${totalFocusTime.inHours}h ${totalFocusTime.inMinutes.remainder(60)}m',
-              labelStyle: statLabelStyle,
-              valueStyle: statValueStyle,
-              accentColor: accentColor,
+              title: 'Promedio Diario de Pomodoros',
+              value: avgPomodorosPerDay.toStringAsFixed(1),
+              icon: Icons.calendar_today,
+              manuscriptBaseTextStyle: manuscriptBaseTextStyle,
+              manuscriptTitleStyle: manuscriptTitleStyle,
             ),
-            const SizedBox(height: 40),
-            // Botón para reiniciar estadísticas
-            ElevatedButton(
+            const SizedBox(height: 16),
+            // Tarjeta para "Racha Actual"
+            _buildStatisticCard(
+              context,
+              title: 'Racha Actual',
+              value: '$currentStreak días',
+              icon: Icons.local_fire_department,
+              manuscriptBaseTextStyle: manuscriptBaseTextStyle,
+              manuscriptTitleStyle: manuscriptTitleStyle,
+            ),
+            const SizedBox(height: 32),
+            // Botón para restablecer estadísticas (funcionalidad de ejemplo)
+            ElevatedButton.icon(
               onPressed: () {
-                // En una aplicación real, esta acción dispararía una lógica
-                // para reiniciar las estadísticas en el almacenamiento de datos subyacente.
-                // Para este ejemplo, solo mostraremos un mensaje de confirmación.
+                // Lógica para restablecer las estadísticas (no implementada aquí)
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      'Estadísticas reiniciadas (simulado).',
-                      style: manuscriptBaseStyle.copyWith(color: primaryColor), // Texto en color papel
+                      'Funcionalidad de restablecer estadísticas no implementada.',
+                      style: manuscriptBaseTextStyle.copyWith(color: Theme.of(context).colorScheme.onError),
                     ),
-                    backgroundColor: accentColor, // Fondo del SnackBar en color tinta
-                    duration: const Duration(seconds: 2),
+                    backgroundColor: Theme.of(context).colorScheme.error,
                   ),
                 );
               },
+              icon: Icon(Icons.refresh, color: Theme.of(context).colorScheme.onError),
+              label: Text(
+                'Restablecer Estadísticas',
+                style: manuscriptBaseTextStyle.copyWith(color: Theme.of(context).colorScheme.onError, fontWeight: FontWeight.bold),
+              ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: accentColor, // Fondo del botón en color tinta
-                foregroundColor: primaryColor, // Color del texto del botón en color papel
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: Theme.of(context).colorScheme.errorContainer, // Color de fondo para una acción de advertencia
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(color: accentColor.withOpacity(0.7), width: 2), // Borde sutil de tinta
+                  side: BorderSide(color: Theme.of(context).colorScheme.error, width: 1), // Borde para enfatizar la acción
                 ),
-                textStyle: manuscriptBaseStyle.copyWith(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: primaryColor, // Asegurar que el color del texto se aplique correctamente
-                ),
+                elevation: 2, // Sombra sutil
               ),
-              child: const Text('Reiniciar Estadísticas'),
             ),
           ],
         ),
@@ -171,46 +133,46 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 
-  /// Widget auxiliar para construir tarjetas individuales de estadísticas.
-  Widget _buildStatCard(
+  // Widget auxiliar para construir cada tarjeta de estadística
+  Widget _buildStatisticCard(
     BuildContext context, {
-    required String label,
+    required String title,
     required String value,
-    required TextStyle labelStyle,
-    required TextStyle valueStyle,
-    required Color accentColor,
+    required IconData icon,
+    required TextStyle manuscriptBaseTextStyle,
+    required TextStyle manuscriptTitleStyle,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.6), // "Papel" ligeramente más claro para el fondo de la tarjeta
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: accentColor.withOpacity(0.3), width: 1), // Borde sutil tipo tinta
-        boxShadow: [
-          BoxShadow(
-            color: accentColor.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 3), // Sombra sutil para dar profundidad, imitando papel en capas
-          ),
-        ],
+    return Card(
+      color: Theme.of(context).colorScheme.surface, // Fondo de la tarjeta (generalmente blanco o muy claro)
+      elevation: 2, // Sombra sutil para un efecto de papel superpuesto
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant, width: 1), // Borde sutil
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: labelStyle,
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              value,
-              style: valueStyle,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Icon(icon, size: 30, color: const Color(0xFF8B4513)), // Icono con el color accent (marrón)
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: manuscriptTitleStyle.copyWith(fontSize: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value,
+                    style: manuscriptBaseTextStyle.copyWith(fontSize: 22, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

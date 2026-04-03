@@ -1,226 +1,227 @@
-Aquí tienes el código Dart completo y funcional para la `PomodoroScreen` de tu aplicación "PomodoroManuscriptApp", siguiendo todos los requisitos especificados.
+Aquí tienes el código completo y funcional para la pantalla `PomodoroScreen`, siguiendo todas las especificaciones y atendiendo la retroalimentación proporcionada.
 
-He incluido un `main` function y `MaterialApp` con `ColorScheme.fromSeed` para que puedas ejecutar y probar la pantalla directamente. También he añadido pantallas placeholder (`SettingsScreen`, `StatisticsScreen`) para la navegación.
+Este archivo (`pomodoro_screen.dart`) está diseñado para ser añadido a tu proyecto Flutter. No incluye `main.dart` ni `welcomescreen.dart`, ya que la solicitud es solo para `PomodoroScreen` y las notas sobre `main.dart` y `welcomescreen.dart` son para correcciones en esos archivos, no para su generación aquí.
 
-**Características clave implementadas:**
-
-*   **Estética de Manuscrito:**
-    *   `backgroundColor: Color(0xFFF5F5DC)` (beige) para el fondo del `Scaffold`.
-    *   `ColorScheme` configurado con `primary: Color(0xFFF5F5DC)` y `secondary: Color(0xFF8B4513)`.
-    *   `TextTheme` personalizado para usar una fuente `serif` genérica, simulando "Times New Roman". Se incluye una nota sobre cómo añadir la fuente real si la tienes.
-    *   Sombras sutiles y bordes redondeados para elementos como el temporizador, dando una sensación de papel superpuesto.
-*   **Temporizador Pomodoro Funcional:**
-    *   `StatefulWidget` para manejar el estado del temporizador.
-    *   Botones "Iniciar", "Pausar" y "Reiniciar".
-    *   Muestra el tiempo restante en formato `MM:SS`.
-    *   Cambio automático entre fases (Pomodoro, Descanso Corto, Descanso Largo).
-    *   Un descanso largo cada 4 Pomodoros (después de 3 descansos cortos).
-    *   Diálogos informativos al completar cada fase.
-*   **Saludo Personalizado:**
-    *   Muestra un saludo dinámico (`Buenos días/tardes/noches`) con el nombre del usuario. El nombre se pasa como parámetro o usa un valor por defecto.
-*   **Monitoreo de Estadísticas:**
-    *   Contador de "Pomodoros Completados" en la sesión actual.
-*   **Navegación:**
-    *   `AppBar` con iconos para navegar a `SettingsScreen` y `StatisticsScreen` usando rutas nombradas.
-
-import 'dart:async'; // Necesario para la clase Timer
+// pomodoro_screen.dart
 import 'package:flutter/material.dart';
+import 'dart:async'; // Necesario para Timer
 
-// Enum para representar las diferentes fases del ciclo Pomodoro
+// Enum para representar las diferentes fases del Pomodoro
 enum PomodoroPhase {
-  pomodoro,
+  focus,
   shortBreak,
   longBreak,
 }
 
 class PomodoroScreen extends StatefulWidget {
-  // El nombre de usuario se pasaría desde WelcomeScreen o se cargaría de SharedPreferences
-  final String userName;
-
-  const PomodoroScreen({Key? key, this.userName = 'Usuario'}) : super(key: key);
+  const PomodoroScreen({super.key});
 
   @override
   State<PomodoroScreen> createState() => _PomodoroScreenState();
 }
 
 class _PomodoroScreenState extends State<PomodoroScreen> {
-  // --- Tiempos Configurables (Valores por defecto, idealmente vendrían de SettingsScreen) ---
-  // En minutos
-  int _pomodoroTime = 25;
-  int _shortBreakTime = 5;
-  int _longBreakTime = 15;
-  int _pomodorosBeforeLongBreak = 4; // Descanso largo después de 3 descansos cortos (4 pomodoros)
-
-  // --- Estado del Temporizador ---
-  late int _currentRemainingTime; // En segundos
   Timer? _timer;
+  int _secondsRemaining = 0;
   bool _isRunning = false;
-  bool _isPaused = false;
+  PomodoroPhase _currentPhase = PomodoroPhase.focus;
+  int _pomodorosCompleted = 0; // Pomodoros completados en el ciclo actual (antes del descanso largo)
+  int _totalPomodorosCompleted = 0; // Total de pomodoros completados en la sesión
 
-  // --- Estado del Ciclo Pomodoro ---
-  PomodoroPhase _currentPhase = PomodoroPhase.pomodoro;
-  int _completedPomodoros = 0; // Pomodoros completados en esta sesión (para estadísticas)
-  int _currentCyclePomodoros = 0; // Pomodoros completados en el ciclo actual (antes de un descanso largo)
-
-  // --- Saludo al Usuario ---
-  String _greeting = 'Cargando...';
+  // Tiempos configurables (en segundos)
+  final int _focusTime = 25 * 60; // 25 minutos
+  final int _shortBreakTime = 5 * 60; // 5 minutos
+  final int _longBreakTime = 15 * 60; // 15 minutos
+  final int _pomodorosBeforeLongBreak = 4; // Cada 4 pomodoros, un descanso largo
 
   @override
   void initState() {
     super.initState();
-    _setInitialTimerDuration();
-    _loadUserNameAndGreeting();
+    _secondsRemaining = _focusTime; // Iniciar con el tiempo de enfoque
   }
 
-  // Establece la duración inicial del temporizador según la fase actual
-  void _setInitialTimerDuration() {
-    switch (_currentPhase) {
-      case PomodoroPhase.pomodoro:
-        _currentRemainingTime = _pomodoroTime * 60;
-        break;
-      case PomodoroPhase.shortBreak:
-        _currentRemainingTime = _shortBreakTime * 60;
-        break;
-      case PomodoroPhase.longBreak:
-        _currentRemainingTime = _longBreakTime * 60;
-        break;
-    }
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
-  // Carga el nombre de usuario y genera el saludo
-  void _loadUserNameAndGreeting() {
-    // En una aplicación real, el nombre de usuario se cargaría de SharedPreferences.
-    // Para este ejemplo, usamos el nombre pasado o un valor por defecto.
-    setState(() {
-      final hour = DateTime.now().hour;
-      String timeOfDay;
-      if (hour < 12) {
-        timeOfDay = 'Buenos días';
-      } else if (hour < 18) {
-        timeOfDay = 'Buenas tardes';
-      } else {
-        timeOfDay = 'Buenas noches';
-      }
-      _greeting = '$timeOfDay ${widget.userName}, bienvenido a tu sesión de Pomodoro.';
-    });
-  }
-
-  // Inicia el temporizador
+  // Inicia o reanuda el temporizador
   void _startTimer() {
-    if (_isRunning && !_isPaused) return; // Ya está corriendo
-    if (_isPaused) {
-      _resumeTimer(); // Si está pausado, lo reanuda
-      return;
-    }
+    if (_isRunning) return; // Evitar iniciar múltiples temporizadores
 
     setState(() {
       _isRunning = true;
-      _isPaused = false;
     });
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_currentRemainingTime > 0) {
+      if (_secondsRemaining > 0) {
         setState(() {
-          _currentRemainingTime--;
+          _secondsRemaining--;
         });
       } else {
         _timer?.cancel();
-        _nextPhase(); // Pasa a la siguiente fase cuando el tiempo se agota
+        _handlePhaseCompletion();
       }
     });
   }
 
   // Pausa el temporizador
   void _pauseTimer() {
-    if (_isRunning && !_isPaused) {
-      _timer?.cancel();
-      setState(() {
-        _isPaused = true;
-        _isRunning = false;
-      });
-    }
-  }
-
-  // Reanuda el temporizador desde el estado de pausa
-  void _resumeTimer() {
+    _timer?.cancel();
     setState(() {
-      _isPaused = false;
-      _isRunning = true;
+      _isRunning = false;
     });
-    _startTimer(); // Simplemente llama a startTimer de nuevo, continuará desde el tiempo restante actual
   }
 
-  // Reinicia el temporizador y las estadísticas de la sesión
+  // Reinicia el temporizador a su estado inicial
   void _resetTimer() {
     _timer?.cancel();
     setState(() {
       _isRunning = false;
-      _isPaused = false;
-      _currentPhase = PomodoroPhase.pomodoro; // Reinicia a la fase Pomodoro
-      _setInitialTimerDuration(); // Restablece el tiempo para Pomodoro
-      _completedPomodoros = 0; // Reinicia las estadísticas de la sesión
-      _currentCyclePomodoros = 0; // Reinicia las estadísticas del ciclo
+      _currentPhase = PomodoroPhase.focus;
+      _secondsRemaining = _focusTime;
+      _pomodorosCompleted = 0;
+      _totalPomodorosCompleted = 0;
     });
   }
 
-  // Lógica para pasar a la siguiente fase del ciclo Pomodoro
-  void _nextPhase() {
-    setState(() {
-      if (_currentPhase == PomodoroPhase.pomodoro) {
-        _completedPomodoros++; // Incrementa los Pomodoros completados
-        _currentCyclePomodoros++; // Incrementa los Pomodoros en el ciclo actual
-        if (_currentCyclePomodoros % _pomodorosBeforeLongBreak == 0) {
-          _currentPhase = PomodoroPhase.longBreak;
-        } else {
-          _currentPhase = PomodoroPhase.shortBreak;
-        }
+  // Maneja la finalización de una fase (enfoque o descanso)
+  void _handlePhaseCompletion() {
+    if (_currentPhase == PomodoroPhase.focus) {
+      _totalPomodorosCompleted++;
+      _pomodorosCompleted++;
+      if (_pomodorosCompleted % _pomodorosBeforeLongBreak == 0) {
+        _currentPhase = PomodoroPhase.longBreak;
+        _secondsRemaining = _longBreakTime;
       } else {
-        // Después de cualquier descanso, siempre se vuelve a Pomodoro
-        _currentPhase = PomodoroPhase.pomodoro;
+        _currentPhase = PomodoroPhase.shortBreak;
+        _secondsRemaining = _shortBreakTime;
       }
-      _setInitialTimerDuration(); // Establece la duración para la nueva fase
-      _isRunning = false; // Detiene el temporizador después del cambio de fase
-      _isPaused = false;
-    });
-
-    // Muestra un diálogo informativo al completar una fase
-    _showPhaseCompletionDialog();
+    } else {
+      // Después de un descanso, siempre volvemos al enfoque
+      _currentPhase = PomodoroPhase.focus;
+      _secondsRemaining = _focusTime;
+    }
+    _startTimer(); // Iniciar automáticamente la siguiente fase
   }
 
-  // Muestra un diálogo al completar una fase (Pomodoro o Descanso)
-  void _showPhaseCompletionDialog() {
-    String title;
-    String content;
-    if (_currentPhase == PomodoroPhase.pomodoro) {
-      title = '¡Descanso Terminado!';
-      content = 'Es hora de volver a concentrarse. Inicia tu próximo Pomodoro.';
-    } else if (_currentPhase == PomodoroPhase.shortBreak) {
-      title = '¡Pomodoro Completado!';
-      content = 'Tómate un breve descanso. Inicia tu descanso corto.';
-    } else { // Long Break
-      title = '¡Pomodoro Completado!';
-      content = 'Has completado $_currentCyclePomodoros Pomodoros. ¡Disfruta de tu merecido descanso largo!';
-    }
+  // Formatea los segundos restantes a un string MM:SS
+  String _formatTime(int seconds) {
+    final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
+    final remainingSeconds = (seconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$remainingSeconds';
+  }
 
-    showDialog(
-      context: context,
-      barrierDismissible: false, // El usuario debe presionar OK
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.surface, // Fondo del diálogo
-          title: Text(title, style: Theme.of(context).textTheme.titleLarge),
-          content: Text(content, style: Theme.of(context).textTheme.bodyMedium),
-          actions: <Widget>[
-            TextButton(
-              child: Text('OK', style: TextStyle(color: Theme.of(context).colorScheme.primaryContainer)),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
+  // Obtiene el nombre de la fase actual para mostrar en la UI
+  String _getPhaseName(PomodoroPhase phase) {
+    switch (phase) {
+      case PomodoroPhase.focus:
+        return 'Enfoque';
+      case PomodoroPhase.shortBreak:
+        return 'Descanso Corto';
+      case PomodoroPhase.longBreak:
+        return 'Descanso Largo';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Definir los colores principales de la app
+    final Color primaryColor = Color(0xFFF5F5DC); // Beige
+    final Color accentColor = Color(0xFF8B4513); // Marrón
+
+    // Estilo de texto para simular Times New Roman y el color de manuscrito
+    final TextStyle manuscriptTextStyle = TextStyle(
+      fontFamily: 'serif', // Usa una fuente serif genérica para simular Times New Roman
+      color: accentColor,
+      fontSize: 20,
+      height: 1.5, // Espaciado de línea para legibilidad
+    );
+
+    return Scaffold(
+      backgroundColor: primaryColor, // Fondo beige para toda la pantalla
+      appBar: AppBar(
+        title: Text(
+          'Temporizador Pomodoro',
+          style: manuscriptTextStyle.copyWith(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: primaryColor,
+        elevation: 0, // Sin sombra para un aspecto más plano
+        iconTheme: IconThemeData(color: accentColor), // Iconos de la AppBar en color marrón
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Indicador de la fase actual
+              Text(
+                _getPhaseName(_currentPhase),
+                style: manuscriptTextStyle.copyWith(fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 40),
+
+              // Temporizador principal
+              Text(
+                _formatTime(_secondsRemaining),
+                style: manuscriptTextStyle.copyWith(fontSize: 96, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 40),
+
+              // Botones de control
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: _isRunning ? _pauseTimer : _startTimer,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: accentColor, // Fondo marrón para los botones
+                      foregroundColor: primaryColor, // Texto beige en los botones
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      _isRunning ? 'Pausar' : 'Iniciar',
+                      style: manuscriptTextStyle.copyWith(color: primaryColor, fontSize: 22),
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  ElevatedButton(
+                    onPressed: _resetTimer,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: accentColor,
+                      foregroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      'Reiniciar',
+                      style: manuscriptTextStyle.copyWith(color: primaryColor, fontSize: 22),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 40),
+
+              // Contador de Pomodoros completados
+              Text(
+                'Pomodoros completados: $_totalPomodorosCompleted',
+                style: manuscriptTextStyle.copyWith(fontSize: 28),
+              ),
+              Text(
+                'Ciclo actual: $_pomodorosCompleted / $_pomodorosBeforeLongBreak',
+                style: manuscriptTextStyle.copyWith(fontSize: 20),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
-
-  // Formatea el tiempo de segundos a MM:
+}
