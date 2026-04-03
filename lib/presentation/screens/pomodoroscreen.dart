@@ -1,279 +1,265 @@
-¡Claro! Aquí tienes el código completo y funcional para la `PomodoroManuscriptApp`, incluyendo la `PomodoroScreen` con la integración del `PomodoroManuscriptProvider` y siguiendo todas tus estrictas instrucciones.
+¡Excelente! Entendido. Me adhiero rigurosamente a tus requisitos y a la retroalimentación específica.
 
-He estructurado el código en varios archivos para una mejor organización, pero lo he consolidado en una única respuesta para tu conveniencia.
+Para que el código compile y funcione correctamente, primero necesitamos establecer la estructura de archivos y el contenido de los modelos y el provider.
+
+Aquí te presento los archivos necesarios, incluyendo los modelos de datos de marcador de posición y el provider centralizado, seguidos del código completo para `PomodoroScreen`.
 
 ---
 
-### 1. `main.dart`
+### 1. Estructura de Archivos (Asumida)
 
-Este archivo configura la aplicación principal, el tema, las rutas y el `ChangeNotifierProvider` para `PomodoroManuscriptProvider`.
+lib/
+├── main.dart
+├── models/
+│   ├── pomodoro_settings.dart
+│   ├── pomodoro_session.dart
+│   └── pomodoro_stats.dart
+├── providers/
+│   └── pomodoro_provider.dart
+└── screens/
+    ├── welcome_screen.dart
+    ├── pomodoro_screen.dart
+    ├── settings_screen.dart
+    └── statistics_screen.dart
 
-// main.dart
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:pomodoro_manuscript_app/pomodoro_manuscript_provider.dart';
-import 'package:pomodoro_manuscript_app/welcome_screen.dart';
-import 'package:pomodoro_manuscript_app/pomodoro_screen.dart';
-import 'package:pomodoro_manuscript_app/settings_screen.dart';
-import 'package:pomodoro_manuscript_app/statistics_screen.dart';
+---
 
-void main() {
-  runApp(const PomodoroManuscriptApp());
+### 2. Archivos de Modelos (Placeholders)
+
+Crea estos archivos en `lib/models/`:
+
+**`lib/models/pomodoro_settings.dart`**
+class PomodoroSettings {
+  final int pomodoroDuration; // in minutes
+  final int shortBreakDuration; // in minutes
+  final int longBreakDuration; // in minutes
+  final int pomodoroCycles; // number of pomodoros before a long break
+
+  PomodoroSettings({
+    this.pomodoroDuration = 25,
+    this.shortBreakDuration = 5,
+    this.longBreakDuration = 15,
+    this.pomodoroCycles = 4,
+  });
+
+  PomodoroSettings copyWith({
+    int? pomodoroDuration,
+    int? shortBreakDuration,
+    int? longBreakDuration,
+    int? pomodoroCycles,
+  }) {
+    return PomodoroSettings(
+      pomodoroDuration: pomodoroDuration ?? this.pomodoroDuration,
+      shortBreakDuration: shortBreakDuration ?? this.shortBreakDuration,
+      longBreakDuration: longBreakDuration ?? this.longBreakDuration,
+      pomodoroCycles: pomodoroCycles ?? this.pomodoroCycles,
+    );
+  }
 }
 
-class PomodoroManuscriptApp extends StatelessWidget {
-  const PomodoroManuscriptApp({super.key});
+**`lib/models/pomodoro_session.dart`**
+class PomodoroSession {
+  final DateTime startTime;
+  final DateTime endTime;
+  final int durationInMinutes;
+  final String type; // 'Pomodoro', 'Short Break', 'Long Break'
+  final bool completed;
 
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => PomodoroManuscriptProvider(),
-      child: MaterialApp(
-        title: 'Pomodoro Manuscript App',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFFF5F5DC), // Beige primary
-            primary: const Color(0xFFF5F5DC), // Beige
-            onPrimary: const Color(0xFF8B4513), // Brown for text on primary
-            secondary: const Color(0xFF8B4513), // Brown accent
-            onSecondary: const Color(0xFFF5F5DC), // Beige for text on accent
-            surface: const Color(0xFFF5F5DC), // Beige surface
-            onSurface: const Color(0xFF8B4513), // Brown for text on surface
-            background: const Color(0xFFF5F5DC), // Beige background
-            onBackground: const Color(0xFF8B4513), // Brown for text on background
-            error: Colors.red,
-            onError: Colors.white,
-          ),
-          textTheme: const TextTheme(
-            displayLarge: TextStyle(fontFamily: 'RobotoSerif', color: Color(0xFF8B4513)),
-            displayMedium: TextStyle(fontFamily: 'RobotoSerif', color: Color(0xFF8B4513)),
-            displaySmall: TextStyle(fontFamily: 'RobotoSerif', color: Color(0xFF8B4513)),
-            headlineLarge: TextStyle(fontFamily: 'RobotoSerif', color: Color(0xFF8B4513)),
-            headlineMedium: TextStyle(fontFamily: 'RobotoSerif', color: Color(0xFF8B4513)),
-            headlineSmall: TextStyle(fontFamily: 'RobotoSerif', color: Color(0xFF8B4513)),
-            titleLarge: TextStyle(fontFamily: 'RobotoSerif', color: Color(0xFF8B4513)),
-            titleMedium: TextStyle(fontFamily: 'RobotoSerif', color: Color(0xFF8B4513)),
-            titleSmall: TextStyle(fontFamily: 'RobotoSerif', color: Color(0xFF8B4513)),
-            bodyLarge: TextStyle(fontFamily: 'RobotoSerif', color: Color(0xFF8B4513)),
-            bodyMedium: TextStyle(fontFamily: 'RobotoSerif', color: Color(0xFF8B4513)),
-            bodySmall: TextStyle(fontFamily: 'RobotoSerif', color: Color(0xFF8B4513)),
-            labelLarge: TextStyle(fontFamily: 'RobotoSerif', color: Color(0xFF8B4513)),
-            labelMedium: TextStyle(fontFamily: 'RobotoSerif', color: Color(0xFF8B4513)),
-            labelSmall: TextStyle(fontFamily: 'RobotoSerif', color: Color(0xFF8B4513)),
-          ),
-          appBarTheme: AppBarTheme(
-            backgroundColor: const Color(0xFFF5F5DC), // Beige
-            foregroundColor: const Color(0xFF8B4513), // Brown
-            elevation: 0,
-            titleTextStyle: TextStyle(
-              fontFamily: 'RobotoSerif',
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          floatingActionButtonTheme: FloatingActionButtonThemeData(
-            backgroundColor: const Color(0xFF8B4513), // Brown
-            foregroundColor: const Color(0xFFF5F5DC), // Beige
-          ),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF8B4513), // Brown
-              foregroundColor: const Color(0xFFF5F5DC), // Beige
-              textStyle: const TextStyle(fontFamily: 'RobotoSerif', fontSize: 18),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF8B4513), // Brown
-              textStyle: const TextStyle(fontFamily: 'RobotoSerif', fontSize: 16),
-            ),
-          ),
-          sliderTheme: SliderThemeData(
-            activeTrackColor: const Color(0xFF8B4513), // Brown
-            inactiveTrackColor: const Color(0xFF8B4513).withOpacity(0.3), // Lighter brown
-            thumbColor: const Color(0xFF8B4513), // Brown
-            overlayColor: const Color(0xFF8B4513).withOpacity(0.2), // Brown overlay
-            valueIndicatorColor: const Color(0xFF8B4513), // Brown
-            valueIndicatorTextStyle: const TextStyle(color: Color(0xFFF5F5DC)), // Beige
-          ),
-          switchTheme: SwitchThemeData(
-            thumbColor: MaterialStateProperty.resolveWith((states) {
-              if (states.contains(MaterialState.selected)) {
-                return const Color(0xFFF5F5DC); // Beige when selected
-              }
-              return const Color(0xFF8B4513); // Brown when unselected
-            }),
-            trackColor: MaterialStateProperty.resolveWith((states) {
-              if (states.contains(MaterialState.selected)) {
-                return const Color(0xFF8B4513); // Brown when selected
-              }
-              return const Color(0xFF8B4513).withOpacity(0.5); // Lighter brown when unselected
-            }),
-          ),
-        ),
-        initialRoute: '/',
-        routes: {
-          '/': (context) => const WelcomeScreen(),
-          '/pomodoro': (context) => const PomodoroScreen(),
-          '/settings': (context) => const SettingsScreen(),
-          '/statistics': (context) => const StatisticsScreen(),
-        },
-      ),
+  PomodoroSession({
+    required this.startTime,
+    required this.endTime,
+    required this.durationInMinutes,
+    required this.type,
+    this.completed = true,
+  });
+}
+
+**`lib/models/pomodoro_stats.dart`**
+class PomodoroStats {
+  final int totalPomodorosCompleted;
+  final Duration totalFocusTime;
+  final List<PomodoroSession> sessions;
+
+  PomodoroStats({
+    this.totalPomodorosCompleted = 0,
+    this.totalFocusTime = Duration.zero,
+    this.sessions = const [],
+  });
+
+  PomodoroStats copyWith({
+    int? totalPomodorosCompleted,
+    Duration? totalFocusTime,
+    List<PomodoroSession>? sessions,
+  }) {
+    return PomodoroStats(
+      totalPomodorosCompleted: totalPomodorosCompleted ?? this.totalPomodorosCompleted,
+      totalFocusTime: totalFocusTime ?? this.totalFocusTime,
+      sessions: sessions ?? this.sessions,
     );
   }
 }
 
 ---
 
-### 2. `pomodoro_manuscript_provider.dart`
+### 3. Provider Centralizado
 
-Este archivo contiene la lógica de estado y el temporizador Pomodoro.
+Crea este archivo en `lib/providers/`:
 
-// pomodoro_manuscript_provider.dart
+**`lib/providers/pomodoro_provider.dart`**
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:pomodoro_manuscript_app/models/pomodoro_settings.dart';
+import 'package:pomodoro_manuscript_app/models/pomodoro_session.dart';
+import 'package:pomodoro_manuscript_app/models/pomodoro_stats.dart';
 
-enum PomodoroStatus {
-  focus('Focus'),
-  shortBreak('Short Break'),
-  longBreak('Long Break'),
-  stopped('Stopped');
-
-  final String displayName;
-  const PomodoroStatus(this.displayName);
+enum PomodoroPhase {
+  focus,
+  shortBreak,
+  longBreak,
 }
 
 class PomodoroManuscriptProvider extends ChangeNotifier {
-  // --- Settings ---
-  int _pomodoroDurationMinutes = 25; // Default 25 minutes
-  int _shortBreakDurationMinutes = 5; // Default 5 minutes
-  int _longBreakDurationMinutes = 15; // Default 15 minutes
-  int _cyclesBeforeLongBreak = 4; // Default 4 pomodoros before a long break
+  PomodoroSettings _settings = PomodoroSettings();
+  PomodoroStats _stats = PomodoroStats();
 
-  // --- Timer State ---
   Timer? _timer;
-  int _currentRemainingSeconds = 0;
-  PomodoroStatus _currentStatus = PomodoroStatus.stopped;
-  bool _isRunning = false;
+  int _remainingSeconds = 0;
+  bool _isTimerRunning = false;
+  PomodoroPhase _currentPhase = PomodoroPhase.focus;
+  int _pomodorosCompletedInCycle = 0; // Tracks completed pomodoros in current set
+  int _currentCycle = 1; // Tracks the overall cycle number (e.g., Cycle 1, Cycle 2)
 
-  // --- Cycle & Statistics ---
-  int _currentCycle = 0; // Number of pomodoros completed in the current set
-  int _completedPomodoros = 0; // Total pomodoros completed across sessions
-  int _totalFocusTimeSeconds = 0; // Total focus time recorded
+  PomodoroSettings get settings => _settings;
+  PomodoroStats get stats => _stats;
+  int get remainingSeconds => _remainingSeconds;
+  bool get isTimerRunning => _isTimerRunning;
+  PomodoroPhase get currentPhase => _currentPhase;
+  int get pomodorosCompletedInCycle => _pomodorosCompletedInCycle;
+  int get currentCycle => _currentCycle;
 
   PomodoroManuscriptProvider() {
-    _currentRemainingSeconds = _pomodoroDurationMinutes * 60;
+    _initializeTimer();
   }
 
-  // --- Getters ---
-  int get pomodoroDurationMinutes => _pomodoroDurationMinutes;
-  int get shortBreakDurationMinutes => _shortBreakDurationMinutes;
-  int get longBreakDurationMinutes => _longBreakDurationMinutes;
-  int get cyclesBeforeLongBreak => _cyclesBeforeLongBreak;
-
-  int get currentRemainingSeconds => _currentRemainingSeconds;
-  PomodoroStatus get currentStatus => _currentStatus;
-  bool get isRunning => _isRunning;
-
-  int get currentCycle => _currentCycle;
-  int get completedPomodoros => _completedPomodoros;
-  int get totalFocusTimeMinutes => (_totalFocusTimeSeconds / 60).round();
-
-  String get formattedTime {
-    int minutes = _currentRemainingSeconds ~/ 60;
-    int seconds = _currentRemainingSeconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  void _initializeTimer() {
+    _remainingSeconds = _settings.pomodoroDuration * 60;
+    notifyListeners();
   }
 
-  // --- Actions ---
-  void startTimer() {
-    if (_isRunning) return; // Prevent starting if already running
-    if (_currentStatus == PomodoroStatus.stopped) {
-      // If starting from stopped, ensure we are in focus mode
-      _currentStatus = PomodoroStatus.focus;
-      _currentRemainingSeconds = _pomodoroDurationMinutes * 60;
+  void updateSettings(PomodoroSettings newSettings) {
+    _settings = newSettings;
+    // If timer is not running and we are in focus phase, reset duration
+    if (!_isTimerRunning && _currentPhase == PomodoroPhase.focus) {
+      _remainingSeconds = _settings.pomodoroDuration * 60;
     }
+    notifyListeners();
+  }
 
-    _isRunning = true;
+  void startTimer() {
+    if (_isTimerRunning) return;
+
+    _isTimerRunning = true;
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_currentRemainingSeconds > 0) {
-        _currentRemainingSeconds--;
-        if (_currentStatus == PomodoroStatus.focus) {
-          _totalFocusTimeSeconds++; // Track focus time only during focus
-        }
+      if (_remainingSeconds > 0) {
+        _remainingSeconds--;
+        notifyListeners();
       } else {
         _timer?.cancel();
-        _isRunning = false;
-        _nextPhase();
+        _isTimerRunning = false;
+        _moveToNextPhase();
       }
-      notifyListeners();
     });
     notifyListeners();
   }
 
   void pauseTimer() {
-    if (!_isRunning) return;
     _timer?.cancel();
-    _isRunning = false;
+    _isTimerRunning = false;
+    notifyListeners();
+  }
+
+  void skipTimer() {
+    _timer?.cancel();
+    _isTimerRunning = false;
+    _moveToNextPhase();
     notifyListeners();
   }
 
   void resetTimer() {
     _timer?.cancel();
-    _isRunning = false;
-    _currentStatus = PomodoroStatus.stopped;
-    _currentRemainingSeconds = _pomodoroDurationMinutes * 60;
-    _currentCycle = 0; // Reset cycle count for the current set
+    _isTimerRunning = false;
+    _currentPhase = PomodoroPhase.focus;
+    _pomodorosCompletedInCycle = 0;
+    _currentCycle = 1;
+    _remainingSeconds = _settings.pomodoroDuration * 60;
     notifyListeners();
   }
 
-  void _nextPhase() {
-    if (_currentStatus == PomodoroStatus.focus) {
-      _completedPomodoros++;
-      _currentCycle++;
-      if (_currentCycle % _cyclesBeforeLongBreak == 0) {
-        _currentStatus = PomodoroStatus.longBreak;
-        _currentRemainingSeconds = _longBreakDurationMinutes * 60;
-      } else {
-        _currentStatus = PomodoroStatus.shortBreak;
-        _currentRemainingSeconds = _shortBreakDurationMinutes * 60;
-      }
-    } else if (_currentStatus == PomodoroStatus.shortBreak || _currentStatus == PomodoroStatus.longBreak) {
-      _currentStatus = PomodoroStatus.focus;
-      _currentRemainingSeconds = _pomodoroDurationMinutes * 60;
-      if (_currentCycle % _cyclesBeforeLongBreak == 0 && _currentStatus == PomodoroStatus.focus) {
-        // If it was a long break, reset the cycle count for the next set
-        _currentCycle = 0;
-      }
+  void _moveToNextPhase() {
+    switch (_currentPhase) {
+      case PomodoroPhase.focus:
+        _pomodorosCompletedInCycle++;
+        _stats = _stats.copyWith(
+          totalPomodorosCompleted: _stats.totalPomodorosCompleted + 1,
+          totalFocusTime: _stats.totalFocusTime + Duration(minutes: _settings.pomodoroDuration),
+          sessions: [
+            ..._stats.sessions,
+            PomodoroSession(
+              startTime: DateTime.now().subtract(Duration(minutes: _settings.pomodoroDuration)),
+              endTime: DateTime.now(),
+              durationInMinutes: _settings.pomodoroDuration,
+              type: 'Pomodoro',
+              completed: true,
+            )
+          ],
+        );
+
+        if (_pomodorosCompletedInCycle % _settings.pomodoroCycles == 0) {
+          _currentPhase = PomodoroPhase.longBreak;
+          _remainingSeconds = _settings.longBreakDuration * 60;
+          _currentCycle++; // Increment overall cycle after a long break
+          _pomodorosCompletedInCycle = 0; // Reset pomodoros for the new cycle
+        } else {
+          _currentPhase = PomodoroPhase.shortBreak;
+          _remainingSeconds = _settings.shortBreakDuration * 60;
+        }
+        break;
+      case PomodoroPhase.shortBreak:
+      case PomodoroPhase.longBreak:
+        _currentPhase = PomodoroPhase.focus;
+        _remainingSeconds = _settings.pomodoroDuration * 60;
+        break;
     }
-    // Automatically start the next phase
-    startTimer();
+    // Optionally, auto-start the next phase: startTimer();
     notifyListeners();
   }
 
-  // --- Settings Update ---
-  void updatePomodoroSettings({
-    int? pomodoro,
-    int? shortBreak,
-    int? longBreak,
-    int? cycles,
-  }) {
-    _pomodoroDurationMinutes = pomodoro ?? _pomodoroDurationMinutes;
-    _shortBreakDurationMinutes = shortBreak ?? _shortBreakDurationMinutes;
-    _longBreakDurationMinutes = longBreak ?? _longBreakDurationMinutes;
-    _cyclesBeforeLongBreak = cycles ?? _cyclesBeforeLongBreak;
-
-    // If timer is stopped, update the displayed time immediately
-    if (_currentStatus == PomodoroStatus.stopped) {
-      _currentRemainingSeconds = _pomodoroDurationMinutes * 60;
+  void updatePomodoroDuration(int duration) {
+    _settings = _settings.copyWith(pomodoroDuration: duration);
+    if (_currentPhase == PomodoroPhase.focus && !_isTimerRunning) {
+      _remainingSeconds = duration * 60;
     }
+    notifyListeners();
+  }
+
+  void updateShortBreakDuration(int duration) {
+    _settings = _settings.copyWith(shortBreakDuration: duration);
+    if (_currentPhase == PomodoroPhase.shortBreak && !_isTimerRunning) {
+      _remainingSeconds = duration * 60;
+    }
+    notifyListeners();
+  }
+
+  void updateLongBreakDuration(int duration) {
+    _settings = _settings.copyWith(longBreakDuration: duration);
+    if (_currentPhase == PomodoroPhase.longBreak && !_isTimerRunning) {
+      _remainingSeconds = duration * 60;
+    }
+    notifyListeners();
+  }
+
+  void updatePomodoroCycles(int cycles) {
+    _settings = _settings.copyWith(pomodoroCycles: cycles);
     notifyListeners();
   }
 
@@ -286,447 +272,137 @@ class PomodoroManuscriptProvider extends ChangeNotifier {
 
 ---
 
-### 3. `welcome_screen.dart`
+### 4. `PomodoroScreen` (Código Solicitado)
 
-La pantalla de bienvenida con un saludo personalizado y navegación.
+Crea este archivo en `lib/screens/`:
 
-// welcome_screen.dart
+**`lib/screens/pomodoro_screen.dart`**
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:pomodoro_manuscript_app/providers/pomodoro_provider.dart';
 
-class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
+class PomodoroScreen extends StatelessWidget {
+  const PomodoroScreen({super.key});
+
+  String _formatTime(int seconds) {
+    final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
+    final remainingSeconds = (seconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$remainingSeconds';
+  }
+
+  String _getPhaseTitle(PomodoroPhase phase) {
+    switch (phase) {
+      case PomodoroPhase.focus:
+        return 'Tiempo de Enfoque';
+      case PomodoroPhase.shortBreak:
+        return 'Descanso Corto';
+      case PomodoroPhase.longBreak:
+        return 'Descanso Largo';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    final TextTheme textTheme = Theme.of(context).textTheme;
+    final pomodoroProvider = context.watch<PomodoroManuscriptProvider>();
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
       appBar: AppBar(
         title: Text(
-          'Pomodoro Manuscript',
-          style: textTheme.titleLarge?.copyWith(color: colorScheme.onSurface),
+          'Temporizador Pomodoro',
+          style: theme.textTheme.headlineMedium?.copyWith(
+            color: theme.colorScheme.onPrimary,
+          ),
         ),
+        backgroundColor: theme.colorScheme.primary,
+        elevation: 0,
         centerTitle: true,
       ),
+      backgroundColor: theme.colorScheme.primary, // Beige paper background
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.menu_book,
-                size: 120,
-                color: colorScheme.secondary,
-              ),
-              const SizedBox(height: 32),
               Text(
-                '¡Bienvenido, Escriba!',
-                style: textTheme.headlineMedium?.copyWith(
-                  color: colorScheme.onBackground,
-                  fontWeight: FontWeight.bold,
+                _getPhaseTitle(pomodoroProvider.currentPhase),
+                style: theme.textTheme.headlineLarge?.copyWith(
+                  color: theme.colorScheme.onPrimary,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               Text(
-                'Prepárate para un enfoque ininterrumpido y productivo.',
-                style: textTheme.bodyLarge?.copyWith(
-                  color: colorScheme.onBackground,
+                _formatTime(pomodoroProvider.remainingSeconds),
+                style: theme.textTheme.displayLarge?.copyWith(
+                  fontSize: 96, // Larger for timer
+                  color: theme.colorScheme.onPrimary,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Ciclo: ${pomodoroProvider.pomodorosCompletedInCycle + 1} / ${pomodoroProvider.settings.pomodoroCycles} (General: ${pomodoroProvider.currentCycle})',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onPrimary.withOpacity(0.8),
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/pomodoro');
-                },
-                child: const Text('Comenzar Pomodoro'),
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/settings');
-                },
-                child: const Text('Configuración'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/statistics');
-                },
-                child: const Text('Estadísticas'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
----
-
-### 4. `pomodoro_screen.dart`
-
-Esta es la pantalla principal del temporizador Pomodoro, integrada con el `PomodoroManuscriptProvider`.
-
-// pomodoro_screen.dart
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:pomodoro_manuscript_app/pomodoro_manuscript_provider.dart';
-
-class PomodoroScreen extends StatelessWidget {
-  const PomodoroScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    final TextTheme textTheme = Theme.of(context).textTheme;
-
-    return Scaffold(
-      backgroundColor: colorScheme.background,
-      appBar: AppBar(
-        title: Text(
-          'Pomodoro',
-          style: textTheme.titleLarge?.copyWith(color: colorScheme.onSurface),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings, color: colorScheme.onSurface),
-            onPressed: () {
-              Navigator.pushNamed(context, '/settings');
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.bar_chart, color: colorScheme.onSurface),
-            onPressed: () {
-              Navigator.pushNamed(context, '/statistics');
-            },
-          ),
-        ],
-      ),
-      body: Consumer<PomodoroManuscriptProvider>(
-        builder: (context, provider, child) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Text(
-                    provider.currentStatus.displayName,
-                    style: textTheme.headlineMedium?.copyWith(
-                      color: colorScheme.onBackground,
-                      fontWeight: FontWeight.bold,
+                  ElevatedButton.icon(
+                    onPressed: pomodoroProvider.isTimerRunning
+                        ? pomodoroProvider.pauseTimer
+                        : pomodoroProvider.startTimer,
+                    icon: Icon(
+                      pomodoroProvider.isTimerRunning ? Icons.pause : Icons.play_arrow,
+                      color: theme.colorScheme.onSecondary,
                     ),
-                  ),
-                  const SizedBox(height: 48),
-                  Container(
-                    padding: const EdgeInsets.all(32.0),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colorScheme.secondary.withOpacity(0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
+                    label: Text(
+                      pomodoroProvider.isTimerRunning ? 'Pausar' : 'Iniciar',
+                      style: theme.textTheme.labelLarge,
                     ),
-                    child: Text(
-                      provider.formattedTime,
-                      style: textTheme.displayLarge?.copyWith(
-                        fontSize: 96,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onPrimary,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.secondary, // Accent color
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 48),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                        onPressed: provider.isRunning ? provider.pauseTimer : provider.startTimer,
-                        child: Text(provider.isRunning ? 'Pausar' : 'Iniciar'),
+                  ElevatedButton.icon(
+                    onPressed: pomodoroProvider.skipTimer,
+                    icon: Icon(
+                      Icons.skip_next,
+                      color: theme.colorScheme.onSecondary,
+                    ),
+                    label: Text(
+                      'Saltar',
+                      style: theme.textTheme.labelLarge,
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.secondary, // Accent color
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      const SizedBox(width: 24),
-                      ElevatedButton(
-                        onPressed: provider.resetTimer,
-                        child: const Text('Reiniciar'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                  Text(
-                    'Pomodoros Completados: ${provider.completedPomodoros}',
-                    style: textTheme.titleMedium?.copyWith(color: colorScheme.onBackground),
-                  ),
-                  Text(
-                    'Ciclo Actual: ${provider.currentCycle} / ${provider.cyclesBeforeLongBreak}',
-                    style: textTheme.titleSmall?.copyWith(color: colorScheme.onBackground),
+                    ),
                   ),
                 ],
               ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
----
-
-### 5. `settings_screen.dart`
-
-La pantalla de configuración para ajustar los tiempos del Pomodoro.
-
-// settings_screen.dart
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:pomodoro_manuscript_app/pomodoro_manuscript_provider.dart';
-
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    final TextTheme textTheme = Theme.of(context).textTheme;
-
-    return Scaffold(
-      backgroundColor: colorScheme.background,
-      appBar: AppBar(
-        title: Text(
-          'Configuración',
-          style: textTheme.titleLarge?.copyWith(color: colorScheme.onSurface),
-        ),
-        centerTitle: true,
-      ),
-      body: Consumer<PomodoroManuscriptProvider>(
-        builder: (context, provider, child) {
-          return ListView(
-            padding: const EdgeInsets.all(24.0),
-            children: [
-              _buildSettingSlider(
-                context,
-                title: 'Tiempo de Enfoque (minutos)',
-                value: provider.pomodoroDurationMinutes.toDouble(),
-                min: 1.0,
-                max: 60.0,
-                divisions: 59,
-                onChanged: (value) {
-                  provider.updatePomodoroSettings(pomodoro: value.toInt());
-                },
-              ),
-              _buildSettingSlider(
-                context,
-                title: 'Descanso Corto (minutos)',
-                value: provider.shortBreakDurationMinutes.toDouble(),
-                min: 1.0,
-                max: 30.0,
-                divisions: 29,
-                onChanged: (value) {
-                  provider.updatePomodoroSettings(shortBreak: value.toInt());
-                },
-              ),
-              _buildSettingSlider(
-                context,
-                title: 'Descanso Largo (minutos)',
-                value: provider.longBreakDurationMinutes.toDouble(),
-                min: 5.0,
-                max: 60.0,
-                divisions: 55,
-                onChanged: (value) {
-                  provider.updatePomodoroSettings(longBreak: value.toInt());
-                },
-              ),
-              _buildSettingSlider(
-                context,
-                title: 'Ciclos antes de Descanso Largo',
-                value: provider.cyclesBeforeLongBreak.toDouble(),
-                min: 1.0,
-                max: 10.0,
-                divisions: 9,
-                onChanged: (value) {
-                  provider.updatePomodoroSettings(cycles: value.toInt());
-                },
-              ),
-              // Puedes añadir más configuraciones aquí si es necesario
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildSettingSlider(
-    BuildContext context, {
-    required String title,
-    required double value,
-    required double min,
-    required double max,
-    required int divisions,
-    required ValueChanged<double> onChanged,
-  }) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    final TextTheme textTheme = Theme.of(context).textTheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '$title: ${value.toInt()}',
-            style: textTheme.titleMedium?.copyWith(color: colorScheme.onBackground),
-          ),
-          Slider(
-            value: value,
-            min: min,
-            max: max,
-            divisions: divisions,
-            onChanged: onChanged,
-            label: value.toInt().toString(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
----
-
-### 6. `statistics_screen.dart`
-
-La pantalla de estadísticas que muestra datos reales del `PomodoroManuscriptProvider`.
-
-// statistics_screen.dart
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:pomodoro_manuscript_app/pomodoro_manuscript_provider.dart';
-
-class StatisticsScreen extends StatelessWidget {
-  const StatisticsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    final TextTheme textTheme = Theme.of(context).textTheme;
-
-    return Scaffold(
-      backgroundColor: colorScheme.background,
-      appBar: AppBar(
-        title: Text(
-          'Estadísticas',
-          style: textTheme.titleLarge?.copyWith(color: colorScheme.onSurface),
-        ),
-        centerTitle: true,
-      ),
-      body: Consumer<PomodoroManuscriptProvider>(
-        builder: (context, provider, child) {
-          return Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Tu Progreso:',
-                  style: textTheme.headlineMedium?.copyWith(
-                    color: colorScheme.onBackground,
-                    fontWeight: FontWeight.bold,
-                  ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: pomodoroProvider.resetTimer,
+                icon: Icon(
+                  Icons.refresh,
+                  color: theme.colorScheme.onSecondary,
                 ),
-                const SizedBox(height: 24),
-                _buildStatCard(
-                  context,
-                  icon: Icons.check_circle_outline,
-                  title: 'Pomodoros Completados',
-                  value: provider.completedPomodoros.toString(),
+                label: Text(
+                  'Reiniciar',
+                  style: theme.textTheme.labelLarge,
                 ),
-                _buildStatCard(
-                  context,
-                  icon: Icons.timer,
-                  title: 'Tiempo Total de Enfoque',
-                  value: '${provider.totalFocusTimeMinutes} minutos',
-                ),
-                // Puedes añadir más estadísticas aquí
-                const Spacer(),
-                Center(
-                  child: Text(
-                    '¡Sigue así, tu productividad está creciendo!',
-                    style: textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onBackground,
-                      fontStyle: FontStyle.italic,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildStatCard(BuildContext context, {required IconData icon, required String title, required String value}) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    final TextTheme textTheme = Theme.of(context).textTheme;
-
-    return Card(
-      color: colorScheme.primary,
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Icon(icon, size: 40, color: colorScheme.secondary),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: textTheme.titleMedium?.copyWith(
-                    color: colorScheme.onPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  value,
-                  style: textTheme.headlineSmall?.copyWith(
-                    color: colorScheme.onPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
----
-
-**Para ejecutar esta aplicación:**
-
-1.  Crea un nuevo proyecto Flutter: `flutter create pomodoro_manuscript_app`
-2.  Navega al directorio del proyecto: `cd pomodoro_manuscript_app`
-3.  Asegúrate de tener la dependencia `provider` en tu `pubspec.yaml`:
-    ```yaml
-    dependencies:
-      flutter:
-        sdk: flutter
-      provider: ^6.0.5 # O la última versión estable
-    ```
-4.  Ejecuta `flutter pub get`.
-5.  Crea los archivos `.dart` mencionados (`main.dart`, `pomodoro_manuscript_provider.dart`,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.secondary, // Accent color
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical
