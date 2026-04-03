@@ -1,121 +1,38 @@
-¡Excelente! Entendido. Mi prioridad es generar el código completo y funcional para `WelcomeScreen`, asegurando que compile sin errores y adhiriéndome estrictamente a las correcciones solicitadas.
+¡Absolutamente! Aquí tienes el código completo y funcional para la `WelcomeScreen`, junto con la estructura de archivos necesaria (`main.dart`, `pomodoro_provider.dart`, y las otras pantallas como stubs funcionales) para que la aplicación compile, funcione y cumpla con todos los requisitos, incluyendo la corrección crítica de la retroalimentación.
 
-Aquí tienes el código para `WelcomeScreen`, junto con los archivos mínimos necesarios (`main.dart` y los stubs de las otras pantallas) para que el proyecto compile y demuestre la navegación.
+He estructurado la respuesta en los siguientes archivos, como si estuvieran en tu proyecto Flutter:
 
----
-
-### 1. `lib/screens/welcome_screen.dart`
-
-Este es el código completo y funcional para la `WelcomeScreen`, cumpliendo con todos los requisitos:
-
-// File: lib/screens/welcome_screen.dart
-import 'package:flutter/material.dart';
-
-class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    final TextTheme textTheme = Theme.of(context).textTheme;
-
-    return Scaffold(
-      backgroundColor: colorScheme.primary, // Color de fondo beige (#F5F5DC)
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              // Título de la aplicación
-              Text(
-                'Pomodoro Manuscript',
-                style: textTheme.displayMedium?.copyWith(
-                  color: colorScheme.onPrimary, // Color de texto marrón (#8B4513)
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 30),
-
-              // Saludo personalizado
-              Text(
-                'Welcome, Scribe!', // Saludo genérico, se puede personalizar con un nombre de usuario real
-                style: textTheme.headlineSmall?.copyWith(
-                  color: colorScheme.onPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-
-              // Descripción de la aplicación
-              Text(
-                'Your personal productivity companion, crafted with the elegance of an ancient manuscript. Focus, track, and master your time.',
-                style: textTheme.bodyLarge?.copyWith(
-                  color: colorScheme.onPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 50),
-
-              // Botones de navegación
-              SizedBox(
-                width: 250, // Ancho fijo para los botones
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/pomodoro');
-                  },
-                  child: const Text('Start Pomodoro'),
-                ),
-              ),
-              const SizedBox(height: 15),
-              SizedBox(
-                width: 250,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/settings');
-                  },
-                  child: const Text('Settings'),
-                ),
-              ),
-              const SizedBox(height: 15),
-              SizedBox(
-                width: 250,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/statistics');
-                  },
-                  child: const Text('Statistics'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+1.  **`lib/main.dart`**: El punto de entrada central de la aplicación, donde se configura el tema, las rutas y el proveedor de estado.
+2.  **`lib/providers/pomodoro_provider.dart`**: La implementación del `ChangeNotifier` para la gestión de estado de la aplicación.
+3.  **`lib/screens/welcome_screen.dart`**: La pantalla de bienvenida solicitada, con navegación a las otras pantallas.
+4.  **`lib/screens/pomodoro_screen.dart`**: Una implementación básica que consume el estado del proveedor.
+5.  **`lib/screens/settings_screen.dart`**: Una implementación básica que consume y modifica el estado del proveedor.
+6.  **`lib/screens/statistics_screen.dart`**: Una implementación básica que consume el estado del proveedor.
 
 ---
 
-### 2. Archivos adicionales para asegurar la compilación
+### 1. `lib/main.dart`
 
-Para que `WelcomeScreen` compile correctamente y sus rutas de navegación funcionen, necesitamos `main.dart` y stubs mínimos para las otras pantallas. Estos archivos también cumplen con la "NOTA ESPECIAL Y ESTRICTA" de completar archivos truncados y limpiar dependencias rotas.
+Este archivo centraliza el punto de entrada, la configuración del tema Material 3, las rutas nombradas y la inicialización del proveedor de estado.
 
-#### `lib/main.dart`
-
-Este archivo configura el `MaterialApp`, el tema con Material Design 3 y las rutas nombradas.
-
-// File: lib/main.dart
+// lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:pomodoro_manuscript_app/providers/pomodoro_provider.dart';
 import 'package:pomodoro_manuscript_app/screens/welcome_screen.dart';
 import 'package:pomodoro_manuscript_app/screens/pomodoro_screen.dart';
 import 'package:pomodoro_manuscript_app/screens/settings_screen.dart';
 import 'package:pomodoro_manuscript_app/screens/statistics_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    // Envuelve la aplicación con ChangeNotifierProvider para la gestión de estado
+    ChangeNotifierProvider(
+      create: (context) => PomodoroProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -123,199 +40,205 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Colores principales de la aplicación
+    const Color primaryColor = Color(0xFFF5F5DC); // Beige
+    const Color accentColor = Color(0xFF8B4513); // Marrón
+
     return MaterialApp(
       title: 'Pomodoro Manuscript App',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        // Configuración de Material Design 3 con ColorScheme.fromSeed
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFF5F5DC), // Color primario para la semilla
-          primary: const Color(0xFFF5F5DC), // Beige (papel)
-          onPrimary: const Color(0xFF8B4513), // Marrón (tinta) para texto/iconos sobre primary
-          secondary: const Color(0xFF8B4513), // Marrón (tinta) como color de acento
-          onSecondary: const Color(0xFFF5F5DC), // Beige para texto/iconos sobre secondary
-          background: const Color(0xFFF5F5DC), // Fondo general
-          onBackground: const Color(0xFF8B4513), // Texto sobre fondo
-          surface: const Color(0xFFF5F5DC), // Superficies (cards, dialogs)
-          onSurface: const Color(0xFF8B4513), // Texto sobre superficies
+          seedColor: primaryColor, // Color base para generar el esquema
+          primary: primaryColor, // Beige para el fondo principal
+          onPrimary: accentColor, // Marrón para texto/iconos sobre el primary
+          secondary: accentColor, // Marrón para elementos de acento (botones)
+          onSecondary: Colors.white, // Blanco para texto/iconos sobre el secondary
+          surface: primaryColor, // Superficies como tarjetas, diálogos
+          onSurface: accentColor, // Texto sobre superficies
+          background: primaryColor, // Fondo general de la app
+          onBackground: accentColor, // Texto sobre el fondo
+          // Puedes ajustar otros colores si es necesario para un control más fino
         ),
         useMaterial3: true,
-        // Configuración de la tipografía para la estética de manuscrito
-        // Se recomienda añadir la fuente 'Merriweather' en pubspec.yaml
+        // Configuración de fuente para la estética de manuscrito (ej. Georgia o Merriweather)
+        // Asegúrate de añadir la fuente a tu pubspec.yaml si no es una fuente por defecto.
+        fontFamily: 'Georgia', // O 'Merriweather' si la configuras en pubspec.yaml
         textTheme: const TextTheme(
-          displayLarge: TextStyle(fontFamily: 'Merriweather', fontSize: 57, color: Color(0xFF8B4513)),
-          displayMedium: TextStyle(fontFamily: 'Merriweather', fontSize: 45, color: Color(0xFF8B4513)),
-          displaySmall: TextStyle(fontFamily: 'Merriweather', fontSize: 36, color: Color(0xFF8B4513)),
-          headlineLarge: TextStyle(fontFamily: 'Merriweather', fontSize: 32, color: Color(0xFF8B4513)),
-          headlineMedium: TextStyle(fontFamily: 'Merriweather', fontSize: 28, color: Color(0xFF8B4513)),
-          headlineSmall: TextStyle(fontFamily: 'Merriweather', fontSize: 24, color: Color(0xFF8B4513)),
-          titleLarge: TextStyle(fontFamily: 'Merriweather', fontSize: 22, color: Color(0xFF8B4513)),
-          titleMedium: TextStyle(fontFamily: 'Merriweather', fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF8B4513)),
-          titleSmall: TextStyle(fontFamily: 'Merriweather', fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF8B4513)),
-          bodyLarge: TextStyle(fontFamily: 'Merriweather', fontSize: 16, color: Color(0xFF8B4513)),
-          bodyMedium: TextStyle(fontFamily: 'Merriweather', fontSize: 14, color: Color(0xFF8B4513)),
-          bodySmall: TextStyle(fontFamily: 'Merriweather', fontSize: 12, color: Color(0xFF8B4513)),
-          labelLarge: TextStyle(fontFamily: 'Merriweather', fontSize: 14, color: Color(0xFFF5F5DC)), // Para texto de botones
-          labelMedium: TextStyle(fontFamily: 'Merriweather', fontSize: 12, color: Color(0xFFF5F5DC)),
-          labelSmall: TextStyle(fontFamily: 'Merriweather', fontSize: 11, color: Color(0xFFF5F5DC)),
+          displayLarge: TextStyle(fontFamily: 'Georgia', color: accentColor),
+          displayMedium: TextStyle(fontFamily: 'Georgia', color: accentColor),
+          displaySmall: TextStyle(fontFamily: 'Georgia', color: accentColor),
+          headlineLarge: TextStyle(fontFamily: 'Georgia', color: accentColor),
+          headlineMedium: TextStyle(fontFamily: 'Georgia', color: accentColor),
+          headlineSmall: TextStyle(fontFamily: 'Georgia', color: accentColor),
+          titleLarge: TextStyle(fontFamily: 'Georgia', color: accentColor),
+          titleMedium: TextStyle(fontFamily: 'Georgia', color: accentColor),
+          titleSmall: TextStyle(fontFamily: 'Georgia', color: accentColor),
+          bodyLarge: TextStyle(fontFamily: 'Georgia', color: accentColor),
+          bodyMedium: TextStyle(fontFamily: 'Georgia', color: accentColor),
+          bodySmall: TextStyle(fontFamily: 'Georgia', color: accentColor),
+          labelLarge: TextStyle(fontFamily: 'Georgia', color: accentColor),
+          labelMedium: TextStyle(fontFamily: 'Georgia', color: accentColor),
+          labelSmall: TextStyle(fontFamily: 'Georgia', color: accentColor),
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFF5F5DC), // Fondo de AppBar beige
-          foregroundColor: Color(0xFF8B4513), // Color de iconos/texto en AppBar marrón
-          elevation: 0, // Sin sombra para un look más plano
-          titleTextStyle: TextStyle(
-            fontFamily: 'Merriweather',
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF8B4513),
-          ),
+          backgroundColor: primaryColor,
+          foregroundColor: accentColor,
+          elevation: 0,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF8B4513), // Fondo de botón marrón
-            foregroundColor: const Color(0xFFF5F5DC), // Texto de botón beige
-            textStyle: const TextStyle(
-              fontFamily: 'Merriweather',
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            backgroundColor: accentColor,
+            foregroundColor: Colors.white,
+            textStyle: const TextStyle(fontFamily: 'Georgia', fontWeight: FontWeight.bold),
           ),
         ),
       ),
-      initialRoute: '/',
+      initialRoute: WelcomeScreen.routeName, // La pantalla de bienvenida como ruta inicial
       routes: {
-        '/': (context) => const WelcomeScreen(),
-        '/pomodoro': (context) => const PomodoroScreen(),
-        '/settings': (context) => const SettingsScreen(),
-        '/statistics': (context) => const StatisticsScreen(),
+        WelcomeScreen.routeName: (context) => const WelcomeScreen(),
+        PomodoroScreen.routeName: (context) => const PomodoroScreen(),
+        SettingsScreen.routeName: (context) => const SettingsScreen(),
+        StatisticsScreen.routeName: (context) => const StatisticsScreen(),
       },
     );
   }
 }
 
-#### `lib/screens/pomodoro_screen.dart` (Stub)
+### 2. `lib/providers/pomodoro_provider.dart`
 
-// File: lib/screens/pomodoro_screen.dart
+Este archivo define el `ChangeNotifier` que gestionará el estado de la aplicación.
+
+// lib/providers/pomodoro_provider.dart
 import 'package:flutter/material.dart';
 
-class PomodoroScreen extends StatelessWidget {
-  const PomodoroScreen({super.key});
+class PomodoroProvider extends ChangeNotifier {
+  // --- Configuración de Tiempos ---
+  int _pomodoroDuration = 25; // minutos
+  int _shortBreakDuration = 5; // minutos
+  int _longBreakDuration = 15; // minutos
+  int _pomodoroCycles = 4; // ciclos antes de un descanso largo
+
+  // --- Estado del Temporizador ---
+  String _currentPhase = 'Pomodoro'; // 'Pomodoro', 'Short Break', 'Long Break'
+  int _remainingTime = 25 * 60; // segundos
+  bool _isRunning = false;
+  int _completedPomodoros = 0; // Pomodoros completados en el ciclo actual
+  int _totalCompletedPomodoros = 0; // Total de pomodoros completados históricamente
+
+  // --- Estadísticas ---
+  List<DateTime> _pomodoroCompletionDates = []; // Fechas de finalización de pomodoros
+
+  // Getters
+  int get pomodoroDuration => _pomodoroDuration;
+  int get shortBreakDuration => _shortBreakDuration;
+  int get longBreakDuration => _longBreakDuration;
+  int get pomodoroCycles => _pomodoroCycles;
+
+  String get currentPhase => _currentPhase;
+  int get remainingTime => _remainingTime;
+  bool get isRunning => _isRunning;
+  int get completedPomodoros => _completedPomodoros;
+  int get totalCompletedPomodoros => _totalCompletedPomodoros;
+  List<DateTime> get pomodoroCompletionDates => _pomodoroCompletionDates;
+
+  // Setters para la configuración (ejemplo, en SettingsScreen)
+  void setPomodoroDuration(int duration) {
+    _pomodoroDuration = duration;
+    notifyListeners();
+  }
+
+  void setShortBreakDuration(int duration) {
+    _shortBreakDuration = duration;
+    notifyListeners();
+  }
+
+  void setLongBreakDuration(int duration) {
+    _longBreakDuration = duration;
+    notifyListeners();
+  }
+
+  void setPomodoroCycles(int cycles) {
+    _pomodoroCycles = cycles;
+    notifyListeners();
+  }
+
+  // --- Métodos de Control del Temporizador (ejemplo, en PomodoroScreen) ---
+  void startTimer() {
+    _isRunning = true;
+    notifyListeners();
+    // Lógica real del temporizador (Timer.periodic) iría aquí,
+    // actualizando _remainingTime y llamando a notifyListeners()
+    // en cada tick.
+  }
+
+  void pauseTimer() {
+    _isRunning = false;
+    notifyListeners();
+  }
+
+  void resetTimer() {
+    _isRunning = false;
+    _currentPhase = 'Pomodoro';
+    _remainingTime = _pomodoroDuration * 60;
+    _completedPomodoros = 0;
+    notifyListeners();
+  }
+
+  void nextPhase() {
+    // Lógica para avanzar a la siguiente fase (descanso corto, largo, etc.)
+    if (_currentPhase == 'Pomodoro') {
+      _completedPomodoros++;
+      _totalCompletedPomodoros++;
+      _pomodoroCompletionDates.add(DateTime.now());
+
+      if (_completedPomodoros % _pomodoroCycles == 0) {
+        _currentPhase = 'Long Break';
+        _remainingTime = _longBreakDuration * 60;
+      } else {
+        _currentPhase = 'Short Break';
+        _remainingTime = _shortBreakDuration * 60;
+      }
+    } else {
+      _currentPhase = 'Pomodoro';
+      _remainingTime = _pomodoroDuration * 60;
+    }
+    _isRunning = false; // Pausar al cambiar de fase
+    notifyListeners();
+  }
+
+  // --- Métodos para Estadísticas (ejemplo, en StatisticsScreen) ---
+  // Puedes añadir más lógica para filtrar por día, semana, etc.
+  int getPomodorosCompletedToday() {
+    final today = DateTime.now();
+    return _pomodoroCompletionDates.where((date) =>
+        date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day).length;
+  }
+}
+
+### 3. `lib/screens/welcome_screen.dart`
+
+Esta es la pantalla de bienvenida solicitada, con la estética de manuscrito y navegación a las otras pantallas.
+
+// lib/screens/welcome_screen.dart
+import 'package:flutter/material.dart';
+
+// Importa las rutas de las otras pantallas para usarlas en la navegación
+import 'package:pomodoro_manuscript_app/screens/pomodoro_screen.dart';
+import 'package:pomodoro_manuscript_app/screens/settings_screen.dart';
+import 'package:pomodoro_manuscript_app/screens/statistics_screen.dart';
+
+class WelcomeScreen extends StatelessWidget {
+  static const String routeName = '/welcome';
+
+  const WelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    final TextTheme textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Pomodoro Timer',
-          style: textTheme.titleLarge,
-        ),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-      ),
-      backgroundColor: colorScheme.background,
-      body: Center(
-        child: Text(
-          'Pomodoro Timer Screen Content',
-          style: textTheme.bodyLarge?.copyWith(color: colorScheme.onBackground),
-        ),
-      ),
-    );
-  }
-}
-
-#### `lib/screens/settings_screen.dart` (Stub)
-
-// File: lib/screens/settings_screen.dart
-import 'package:flutter/material.dart';
-
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    final TextTheme textTheme = Theme.of(context).textTheme;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Settings',
-          style: textTheme.titleLarge,
-        ),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-      ),
-      backgroundColor: colorScheme.background,
-      body: Center(
-        child: Text(
-          'Settings Screen Content',
-          style: textTheme.bodyLarge?.copyWith(color: colorScheme.onBackground),
-        ),
-      ),
-    );
-  }
-}
-
-#### `lib/screens/statistics_screen.dart` (Stub)
-
-// File: lib/screens/statistics_screen.dart
-import 'package:flutter/material.dart';
-
-class StatisticsScreen extends StatelessWidget {
-  const StatisticsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    final TextTheme textTheme = Theme.of(context).textTheme;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Statistics',
-          style: textTheme.titleLarge,
-        ),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-      ),
-      backgroundColor: colorScheme.background,
-      body: Center(
-        child: Text(
-          'Statistics Screen Content',
-          style: textTheme.bodyLarge?.copyWith(color: colorScheme.onBackground),
-        ),
-      ),
-    );
-  }
-}
-
----
-
-### 3. `pubspec.yaml` (Fragmento para la fuente)
-
-Para que la fuente 'Merriweather' funcione y la estética de manuscrito sea completa, debes añadirla a tu `pubspec.yaml`:
-
-# ... otras dependencias
-flutter:
-  uses-material-design: true
-
-  # Para la estética de manuscrito, se recomienda una fuente serif como Merriweather
-  fonts:
-    - family: Merriweather
-      fonts:
-        - asset: assets/fonts/Merriweather-Regular.ttf
-        - asset: assets/fonts/Merriweather-Bold.ttf
-          weight: 700
-        - asset: assets/fonts/Merriweather-Italic.ttf
-          style: italic
-        # Asegúrate de tener estos archivos .ttf en la ruta especificada
-        # Puedes descargarlos de Google Fonts
-
-**Nota:** Asegúrate de crear la carpeta `assets/fonts/` en la raíz de tu proyecto y colocar los archivos `.ttf` de la fuente Merriweather allí.
-
-Con estos archivos, tu proyecto debería compilar sin errores y la `WelcomeScreen` estará completamente funcional con la navegación y la estética de diseño solicitada.
+    // Define estilos de texto para la estética de manuscrito.
+    // Se usa 'Georgia' como ejemplo de fuente serif. Para una fuente específica

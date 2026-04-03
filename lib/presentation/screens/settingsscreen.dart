@@ -1,320 +1,327 @@
-Aquí tienes el código Dart completo y funcional para la pantalla `SettingsScreen` de tu aplicación "PomodoroManuscriptApp", adhiriéndome estrictamente a todos los requisitos, incluyendo la nota especial sobre la limpieza de dependencias y la resolución de conflictos de proveedores.
+Aquí tienes el código Dart completo y funcional para la pantalla `SettingsScreen` de tu aplicación "PomodoroManuscriptApp", que cumple con todos los requisitos, incluyendo la integración con `Provider` para la gestión de estado y las correcciones críticas solicitadas.
 
-Este código utiliza un `StatefulWidget` para gestionar el estado local de las configuraciones (duraciones de Pomodoro, descansos, etc.) sin depender de ningún proveedor externo ni de archivos inexistentes, asegurando que compile directamente.
+**Nota importante sobre las importaciones:**
+El requisito de "Importa solo: `package:flutter/material.dart`" entra en conflicto directo con el requisito de "Integra la gestión de estado" usando `Provider`. Para que la gestión de estado sea funcional, es indispensable importar `package:provider/provider.dart` y el archivo de tu proveedor (`pomodoromanuscriptapp_provider.dart`). He priorizado la funcionalidad y la integración de estado, que fue marcada como una "corrección crítica", incluyendo las importaciones necesarias.
+
+---
+
+**`settings_screen.dart`**
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+// Importa tu archivo de proveedor. Asegúrate de que la ruta sea correcta.
+// Se asume que este archivo existe y contiene la clase PomodoroManuscriptAppProvider.
+import 'package:pomodoro_manuscript_app/pomodoromanuscriptapp_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
-  static const String routeName = '/settings';
-
   const SettingsScreen({super.key});
+
+  static const String routeName = '/settings';
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // Valores por defecto para las configuraciones del Pomodoro
-  // En una aplicación real, estos valores se cargarían de un almacenamiento persistente
-  // (e.g., SharedPreferences, Hive, o un proveedor de estado).
-  double _pomodoroDuration = 25.0; // minutos
-  double _shortBreakDuration = 5.0; // minutos
-  double _longBreakDuration = 15.0; // minutos
-  int _pomodoroCyclesBeforeLongBreak = 4; // ciclos
+  // Estado local para los Sliders y DropdownButton para proporcionar
+  // retroalimentación inmediata durante la interacción del usuario.
+  // Los valores finales se guardarán en el proveedor.
+  late int _currentPomodoroDuration;
+  late int _currentShortBreakDuration;
+  late int _currentLongBreakDuration;
+  late int _currentPomodorosBeforeLongBreak;
 
   @override
   void initState() {
     super.initState();
-    // Aquí se podría implementar la lógica para cargar las configuraciones guardadas.
-    // Por ahora, usamos los valores por defecto.
-  }
-
-  /// Simula el guardado de las configuraciones.
-  /// En una aplicación real, esto actualizaría un proveedor de estado o
-  /// guardaría los datos en un almacenamiento persistente.
-  void _saveSettings() {
-    // Lógica para guardar las configuraciones
-    // Por ejemplo:
-    // SharedPreferences.getInstance().then((prefs) {
-    //   prefs.setDouble('pomodoroDuration', _pomodoroDuration);
-    //   prefs.setDouble('shortBreakDuration', _shortBreakDuration);
-    //   prefs.setDouble('longBreakDuration', _longBreakDuration);
-    //   prefs.setInt('pomodoroCyclesBeforeLongBreak', _pomodoroCyclesBeforeLongBreak);
-    // });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Settings saved!',
-          style: TextStyle(color: Theme.of(context).colorScheme.onTertiary),
-        ),
-        backgroundColor: Theme.of(context).colorScheme.tertiary,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    // Inicializa el estado local con los valores actuales del proveedor.
+    // Usamos context.read para obtener el valor sin escuchar cambios.
+    final provider = context.read<PomodoroManuscriptAppProvider>();
+    _currentPomodoroDuration = provider.pomodoroDuration;
+    _currentShortBreakDuration = provider.shortBreakDuration;
+    _currentLongBreakDuration = provider.longBreakDuration;
+    _currentPomodorosBeforeLongBreak = provider.pomodorosBeforeLongBreak;
   }
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final Color primaryColor = const Color(0xFFF5F5DC); // Beige
+    final Color accentColor = const Color(0xFF8B4513); // Marrón
+
+    // Estilos de texto personalizados para la estética de manuscrito
+    // Se asume que 'OldStandardTT' está configurado en pubspec.yaml
+    final TextStyle manuscriptTextStyle = TextStyle(
+      fontFamily: 'OldStandardTT',
+      color: accentColor,
+      fontSize: 18,
+    );
+
+    final TextStyle titleTextStyle = TextStyle(
+      fontFamily: 'OldStandardTT',
+      color: accentColor,
+      fontSize: 24,
+      fontWeight: FontWeight.bold,
+    );
 
     return Scaffold(
+      backgroundColor: primaryColor,
       appBar: AppBar(
         title: Text(
           'Settings',
-          style: TextStyle(
-            color: colorScheme.onPrimaryContainer, // Color oscuro para el texto del título
-            fontFamily: 'Cursive', // Fuente de ejemplo para estética de manuscrito
-          ),
+          style: titleTextStyle.copyWith(fontSize: 28),
         ),
-        backgroundColor: colorScheme.primaryContainer, // Fondo claro para el AppBar
-        iconTheme: IconThemeData(
-          color: colorScheme.onPrimaryContainer, // Color oscuro para los iconos
-        ),
+        backgroundColor: primaryColor,
+        foregroundColor: accentColor,
+        elevation: 0, // Sin sombra para un look más plano de manuscrito
+        centerTitle: true,
       ),
-      backgroundColor: colorScheme.background, // Color de fondo principal (beige)
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: <Widget>[
-          _buildSettingSlider(
-            context,
-            'Pomodoro Duration',
-            _pomodoroDuration,
-            1.0, // Mínimo 1 minuto
-            60.0, // Máximo 60 minutos
-            (value) {
-              setState(() {
-                _pomodoroDuration = value;
-              });
-            },
-            'minutes',
-          ),
-          const SizedBox(height: 20),
-          _buildSettingSlider(
-            context,
-            'Short Break Duration',
-            _shortBreakDuration,
-            1.0, // Mínimo 1 minuto
-            30.0, // Máximo 30 minutos
-            (value) {
-              setState(() {
-                _shortBreakDuration = value;
-              });
-            },
-            'minutes',
-          ),
-          const SizedBox(height: 20),
-          _buildSettingSlider(
-            context,
-            'Long Break Duration',
-            _longBreakDuration,
-            1.0, // Mínimo 1 minuto
-            60.0, // Máximo 60 minutos
-            (value) {
-              setState(() {
-                _longBreakDuration = value;
-              });
-            },
-            'minutes',
-          ),
-          const SizedBox(height: 20),
-          _buildSettingStepper(
-            context,
-            'Cycles before Long Break',
-            _pomodoroCyclesBeforeLongBreak,
-            1, // Mínimo 1 ciclo
-            10, // Máximo 10 ciclos
-            (value) {
-              setState(() {
-                _pomodoroCyclesBeforeLongBreak = value;
-              });
-            },
-            'cycles',
-          ),
-          const SizedBox(height: 40),
-          ElevatedButton(
-            onPressed: _saveSettings,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.tertiary, // Color de acento para el botón
-              foregroundColor: colorScheme.onTertiary, // Color del texto en el botón
-              padding: const EdgeInsets.symmetric(vertical: 15),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+      body: Consumer<PomodoroManuscriptAppProvider>(
+        builder: (context, provider, child) {
+          // Aunque los sliders usan estado local para el arrastre,
+          // los Text que muestran los valores y el DropdownButton
+          // se actualizan directamente desde el proveedor, asegurando
+          // que la UI refleje el estado global.
+          // Si los valores del proveedor cambian externamente mientras
+          // esta pantalla está abierta, el Consumer reconstruirá y
+          // los sliders se actualizarán a través de su `value` si se
+          // sincronizan aquí, pero para evitar saltos visuales durante
+          // el arrastre, mantenemos el estado local para el slider `value`.
+          // Sin embargo, para el DropdownButton, es más directo actualizar
+          // el estado local aquí para que el `value` del Dropdown refleje
+          // el proveedor si cambia.
+          _currentPomodorosBeforeLongBreak = provider.pomodorosBeforeLongBreak;
+
+          return ListView(
+            padding: const EdgeInsets.all(16.0),
+            children: [
+              _buildSettingCard(
+                context,
+                title: 'Pomodoro Duration',
+                value: '${provider.pomodoroDuration} min',
+                slider: Slider(
+                  value: _currentPomodoroDuration.toDouble(),
+                  min: 15,
+                  max: 60,
+                  divisions: 9, // (60-15) / 5 = 9 divisiones
+                  activeColor: accentColor,
+                  inactiveColor: accentColor.withOpacity(0.3),
+                  thumbColor: accentColor,
+                  label: '${_currentPomodoroDuration.round()} min',
+                  onChanged: (double value) {
+                    setState(() {
+                      _currentPomodoroDuration = value.round();
+                    });
+                  },
+                  onChangeEnd: (double value) {
+                    // Solo actualiza el proveedor cuando el usuario suelta el slider
+                    provider.setPomodoroDuration(value.round());
+                  },
+                ),
+                textStyle: manuscriptTextStyle,
               ),
-            ),
-            child: Text(
-              'Save Settings',
-              style: TextStyle(
-                fontSize: 18,
-                fontFamily: 'Cursive', // Fuente de ejemplo
+              const SizedBox(height: 20),
+              _buildSettingCard(
+                context,
+                title: 'Short Break Duration',
+                value: '${provider.shortBreakDuration} min',
+                slider: Slider(
+                  value: _currentShortBreakDuration.toDouble(),
+                  min: 3,
+                  max: 10,
+                  divisions: 7, // (10-3) / 1 = 7 divisiones
+                  activeColor: accentColor,
+                  inactiveColor: accentColor.withOpacity(0.3),
+                  thumbColor: accentColor,
+                  label: '${_currentShortBreakDuration.round()} min',
+                  onChanged: (double value) {
+                    setState(() {
+                      _currentShortBreakDuration = value.round();
+                    });
+                  },
+                  onChangeEnd: (double value) {
+                    provider.setShortBreakDuration(value.round());
+                  },
+                ),
+                textStyle: manuscriptTextStyle,
               ),
-            ),
-          ),
-        ],
+              const SizedBox(height: 20),
+              _buildSettingCard(
+                context,
+                title: 'Long Break Duration',
+                value: '${provider.longBreakDuration} min',
+                slider: Slider(
+                  value: _currentLongBreakDuration.toDouble(),
+                  min: 10,
+                  max: 30,
+                  divisions: 8, // (30-10) / 2.5 = 8 divisiones (aprox)
+                  activeColor: accentColor,
+                  inactiveColor: accentColor.withOpacity(0.3),
+                  thumbColor: accentColor,
+                  label: '${_currentLongBreakDuration.round()} min',
+                  onChanged: (double value) {
+                    setState(() {
+                      _currentLongBreakDuration = value.round();
+                    });
+                  },
+                  onChangeEnd: (double value) {
+                    provider.setLongBreakDuration(value.round());
+                  },
+                ),
+                textStyle: manuscriptTextStyle,
+              ),
+              const SizedBox(height: 20),
+              _buildSettingCard(
+                context,
+                title: 'Pomodoros before Long Break',
+                value: '${provider.pomodorosBeforeLongBreak} cycles',
+                child: DropdownButton<int>(
+                  value: _currentPomodorosBeforeLongBreak,
+                  icon: Icon(Icons.arrow_drop_down, color: accentColor),
+                  dropdownColor: primaryColor.withOpacity(0.9), // Fondo del menú desplegable
+                  underline: Container(height: 1, color: accentColor),
+                  style: manuscriptTextStyle,
+                  onChanged: (int? newValue) {
+                    if (newValue != null) {
+                      // Actualiza el estado local y el proveedor
+                      setState(() {
+                        _currentPomodorosBeforeLongBreak = newValue;
+                      });
+                      provider.setPomodorosBeforeLongBreak(newValue);
+                    }
+                  },
+                  items: <int>[2, 3, 4, 5, 6] // Opciones para ciclos
+                      .map<DropdownMenuItem<int>>((int value) {
+                    return DropdownMenuItem<int>(
+                      value: value,
+                      child: Text('$value', style: manuscriptTextStyle),
+                    );
+                  }).toList(),
+                ),
+                textStyle: manuscriptTextStyle,
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  /// Widget auxiliar para construir un control deslizante (Slider) de configuración.
-  Widget _buildSettingSlider(
-    BuildContext context,
-    String title,
-    double currentValue,
-    double min,
-    double max,
-    ValueChanged<double> onChanged,
-    String unit,
-  ) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onBackground, // Texto oscuro sobre fondo beige
-            fontFamily: 'Cursive',
-          ),
-        ),
-        Row(
-          children: [
-            Expanded(
-              child: Slider(
-                value: currentValue,
-                min: min,
-                max: max,
-                divisions: (max - min).toInt(), // Divisiones para valores enteros
-                onChanged: onChanged,
-                label: currentValue.round().toString(),
-                activeColor: colorScheme.tertiary, // Color de acento para la parte activa
-                inactiveColor: colorScheme.tertiary.withOpacity(0.3),
-              ),
-            ),
-            Text(
-              '${currentValue.round()} $unit',
-              style: TextStyle(
-                fontSize: 16,
-                color: colorScheme.onBackground,
-                fontFamily: 'Cursive',
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+  // Widget auxiliar para construir cada tarjeta de configuración
+  Widget _buildSettingCard(
+    BuildContext context, {
+    required String title,
+    required String value,
+    Widget? slider, // Puede ser un Slider
+    Widget? child, // O cualquier otro widget (como DropdownButton)
+    required TextStyle textStyle,
+  }) {
+    final Color accentColor = const Color(0xFF8B4513); // Marrón
 
-  /// Widget auxiliar para construir un control de pasos (Stepper) de configuración.
-  Widget _buildSettingStepper(
-    BuildContext context,
-    String title,
-    int currentValue,
-    int min,
-    int max,
-    ValueChanged<int> onChanged,
-    String unit,
-  ) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onBackground,
-            fontFamily: 'Cursive',
-          ),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Card(
+      color: const Color(0xFFF5F5DC).withOpacity(0.8), // Tarjeta beige ligeramente transparente
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(color: accentColor.withOpacity(0.5), width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            IconButton(
-              icon: const Icon(Icons.remove_circle_outline),
-              color: colorScheme.tertiary,
-              onPressed: currentValue > min
-                  ? () => onChanged(currentValue - 1)
-                  : null, // Deshabilita si llega al mínimo
-            ),
             Text(
-              '$currentValue $unit',
-              style: TextStyle(
-                fontSize: 16,
-                color: colorScheme.onBackground,
-                fontFamily: 'Cursive',
-              ),
+              title,
+              style: textStyle.copyWith(fontWeight: FontWeight.bold, fontSize: 20),
             ),
-            IconButton(
-              icon: const Icon(Icons.add_circle_outline),
-              color: colorScheme.tertiary,
-              onPressed: currentValue < max
-                  ? () => onChanged(currentValue + 1)
-                  : null, // Deshabilita si llega al máximo
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    value,
+                    style: textStyle.copyWith(fontSize: 16),
+                  ),
+                ),
+                if (slider != null) Expanded(flex: 2, child: slider),
+                if (child != null) child,
+              ],
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 }
 
-// --- Estructura principal de la aplicación para propósitos de prueba ---
-// Este código se incluye para hacer que SettingsScreen sea directamente ejecutable
-// y demostrar el tema de Material 3 con los colores especificados.
-// En una aplicación real, esto estaría en main.dart.
+---
+
+**Asunción para `pomodoromanuscriptapp_provider.dart`:**
+
+Para que el código anterior funcione, necesitas un archivo `pomodoromanuscriptapp_provider.dart` en la ruta `lib/pomodoromanuscriptapp_provider.dart` (o la ruta que hayas configurado en tu `pubspec.yaml` para el paquete `pomodoro_manuscript_app`). Aquí tienes una estructura básica de cómo debería ser ese archivo:
+
+// lib/pomodoromanuscriptapp_provider.dart
+import 'package:flutter/foundation.dart'; // Para ChangeNotifier
+
+class PomodoroManuscriptAppProvider extends ChangeNotifier {
+  // Valores predeterminados de las configuraciones
+  int _pomodoroDuration = 25; // minutos
+  int _shortBreakDuration = 5; // minutos
+  int _longBreakDuration = 15; // minutos
+  int _pomodorosBeforeLongBreak = 4;
+
+  // Getters para acceder a las configuraciones
+  int get pomodoroDuration => _pomodoroDuration;
+  int get shortBreakDuration => _shortBreakDuration;
+  int get longBreakDuration => _longBreakDuration;
+  int get pomodorosBeforeLongBreak => _pomodorosBeforeLongBreak;
+
+  // Setters para modificar las configuraciones y notificar a los listeners
+  void setPomodoroDuration(int duration) {
+    if (_pomodoroDuration != duration) {
+      _pomodoroDuration = duration;
+      notifyListeners();
+    }
+  }
+
+  void setShortBreakDuration(int duration) {
+    if (_shortBreakDuration != duration) {
+      _shortBreakDuration = duration;
+      notifyListeners();
+    }
+  }
+
+  void setLongBreakDuration(int duration) {
+    if (_longBreakDuration != duration) {
+      _longBreakDuration = duration;
+      notifyListeners();
+    }
+  }
+
+  void setPomodorosBeforeLongBreak(int count) {
+    if (_pomodorosBeforeLongBreak != count) {
+      _pomodorosBeforeLongBreak = count;
+      notifyListeners();
+    }
+  }
+}
+
+---
+
+**Configuración en `main.dart` (Ejemplo):**
+
+Para usar `SettingsScreen` y el `PomodoroManuscriptAppProvider`, tu `main.dart` debería lucir algo así:
+
+// main.dart
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:pomodoro_manuscript_app/pomodoromanuscriptapp_provider.dart';
+import 'package:pomodoro_manuscript_app/screens/welcome_screen.dart'; // Asume que existe
+import 'package:pomodoro_manuscript_app/screens/pomodoro_screen.dart'; // Asume que existe
+import 'package:pomodoro_manuscript_app/screens/settings_screen.dart';
+import 'package:pomodoro_manuscript_app/screens/statistics_screen.dart'; // Asume que existe
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    // Colores principales de la aplicación
-    final Color primaryColor = Color(0xFFF5F5DC); // Beige (Papel)
-    final Color accentColor = Color(0xFF8B4513); // Marrón (Tinta)
-
-    return MaterialApp(
-      title: 'PomodoroManuscriptApp',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: primaryColor, // Usa el beige como color semilla
-          // Ajustes manuales para asegurar la estética de manuscrito
-          primary: primaryColor, // Fondo principal beige
-          onPrimary: accentColor, // Texto oscuro sobre primary
-          primaryContainer: primaryColor.withOpacity(0.8), // Contenedores ligeramente más oscuros
-          onPrimaryContainer: accentColor, // Texto oscuro sobre primaryContainer
-          secondary: accentColor, // Color secundario (marrón)
-          onSecondary: primaryColor, // Texto claro sobre secondary
-          tertiary: accentColor, // Color de acento para elementos interactivos (sliders, botones)
-          onTertiary: primaryColor, // Texto claro sobre tertiary
-          background: primaryColor, // Fondo general de la pantalla
-          onBackground: accentColor, // Texto sobre el fondo general
-          surface: primaryColor, // Superficies de tarjetas/diálogos
-          onSurface: accentColor, // Texto sobre superficies
-          error: Colors.red,
-          onError: Colors.white,
-        ),
-        useMaterial3: true,
-        fontFamily: 'Roboto', // Fuente por defecto, se puede personalizar
-        // Para la estética de manuscrito, podrías cargar fuentes personalizadas
-        // como 'Cursive' o 'Handwritten' en pubspec.yaml y usarlas aquí.
-      ),
-      home: const SettingsScreen(), // Muestra SettingsScreen directamente para probar
-      // En una aplicación completa, aquí iría WelcomeScreen o PomodoroScreen
-      routes: {
-        SettingsScreen.routeName: (context) => const SettingsScreen(),
-        // Aquí se definirían las rutas para las otras pantallas:
-        // '/welcome': (context) => const WelcomeScreen(),
-        // '/pomodoro': (context) => const PomodoroScreen(),
-        // '/statistics': (context) => const StatisticsScreen(),
-      },
-    );
-  }
-}
+class MyApp extends
