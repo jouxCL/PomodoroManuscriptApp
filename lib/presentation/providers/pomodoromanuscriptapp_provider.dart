@@ -1,181 +1,249 @@
-Aquí tienes el código Dart completo para el `ChangeNotifier` provider de estado, siguiendo estrictamente los modelos y repositorios proporcionados, y abordando los requisitos de gestión de estado y los posibles errores de compilación.
+Aquí tienes el código Dart completo para el `ChangeNotifier` del estado de la aplicación "PomodoroManuscriptApp", siguiendo todas las reglas y correcciones solicitadas.
 
-Este provider gestiona la configuración de la aplicación (`AppConfig`), las estadísticas generales (`OverallStats`) y el estado actual del temporizador Pomodoro, interactuando con el `PomodoroManuscriptAppRepository` para la persistencia de datos.
+**Estructura de Archivos (según las correcciones de nombres):**
 
-// File: lib/providers/pomodoro_manuscript_app_provider.dart
+lib/
+├── models/
+│   └── pomodoro_manuscript_app_model.dart  (EXISTENTE)
+├── datasources/
+│   └── pomodoro_manuscript_app_local_datasource.dart (EXISTENTE)
+├── repositories/
+│   └── pomodoro_manuscript_app_repository.dart (EXISTENTE)
+└── providers/
+    └── pomodoro_manuscript_app_provider.dart (NUEVO ARCHIVO)
 
-import 'package:flutter/material.dart';
+---
+
+### `lib/providers/pomodoro_manuscript_app_provider.dart`
+
 import 'dart:async'; // Para el uso de Timer
+import 'package:flutter/material.dart'; // Para ChangeNotifier y debugPrint
 
-// Importa los modelos y el repositorio desde sus rutas relativas.
-// Asegúrate de que estas rutas coincidan con la estructura de tu proyecto.
-import '../models/pomodoromanuscriptapp_model.dart';
-import '../repositories/pomodoromanuscriptapp_repository.dart';
+// Importaciones de los modelos y repositorios proporcionados
+import '../models/pomodoro_manuscript_app_model.dart';
+import '../repositories/pomodoro_manuscript_app_repository.dart';
 
-/// Enum para representar el estado actual del temporizador Pomodoro.
-/// Esto ayuda a la UI a saber si está en fase de trabajo, descanso, pausado o detenido.
-enum PomodoroTimerState {
+/// Enum para representar las diferentes fases del ciclo Pomodoro.
+enum PomodoroPhase {
   work,
   shortBreak,
   longBreak,
-  paused,
-  stopped,
 }
 
-/// `PomodoroManuscriptAppProvider` es un `ChangeNotifier` que gestiona
-/// el estado global de la aplicación Pomodoro Manuscript.
+/// [PomodoroManuscriptAppProvider] es un ChangeNotifier que gestiona el estado
+/// global de la aplicación Pomodoro.
 ///
-/// Se encarga de:
-/// 1. Cargar y guardar la configuración de la aplicación (tiempos de Pomodoro, perfil de usuario).
-/// 2. Cargar y actualizar las estadísticas de productividad.
-/// 3. Controlar el ciclo de vida del temporizador Pomodoro (iniciar, pausar, detener, transicionar fases).
-/// 4. Acumular estadísticas de la sesión actual antes de guardarlas.
-class PomodoroManuscriptAppProvider with ChangeNotifier {
+/// Se encarga de la lógica del temporizador, la gestión de las fases,
+/// la actualización de estadísticas y la persistencia de datos a través del repositorio.
+class PomodoroManuscriptAppProvider extends ChangeNotifier {
   final PomodoroManuscriptAppRepository _repository;
 
-  // --- Estado de la aplicación ---
-  // `_appConfig` contiene la configuración de Pomodoro y el perfil de usuario.
-  AppConfig _appConfig = const AppConfig();
-  // `_overallStats` contiene las estadísticas acumuladas y el historial de sesiones.
-  OverallStats _overallStats = const OverallStats();
-
-  // --- Estado del temporizador Pomodoro ---
-  // Indica la fase actual del temporizador (trabajo, descanso, etc.).
-  PomodoroTimerState _timerState = PomodoroTimerState.stopped;
-  // Tiempo restante para la fase actual.
-  Duration _remainingTime = Duration.zero;
-  // Contador de Pomodoros completados en el ciclo actual (antes de un descanso largo).
-  int _currentCyclePomodoros = 0;
-  // Indica si el temporizador está activamente contando hacia abajo.
-  bool _isTimerRunning = false;
-  // Instancia del temporizador de Dart.
+  // --- Estado interno del Provider ---
+  PomodoroManuscriptAppState _appState = PomodoroManuscriptAppState.initial();
   Timer? _timer;
-
-  // --- Estadísticas de la sesión actual (acumuladas en memoria antes de guardar) ---
-  // Estas variables acumulan los datos de la sesión actual de Pomodoro
-  // y se guardan en `OverallStats` cuando la sesión se detiene.
-  int _currentSessionWorkTimeMinutes = 0;
-  int _currentSessionBreakTimeMinutes = 0;
-  int _currentSessionPomodorosCompleted = 0;
+  int _remainingSeconds = 0;
+  PomodoroPhase _currentPhase = PomodoroPhase.work;
+  int _pomodoroCyclesCompletedInSession = 0; // Cuenta los ciclos de trabajo completados en la sesión actual
+  bool _isRunning = false;
+  bool _isInitialized = false; // Indica si el estado inicial ha sido cargado
 
   /// Constructor del provider.
-  /// Requiere una implementación del repositorio para interactuar con los datos.
+  /// Requiere una instancia de [PomodoroManuscriptAppRepository] para interactuar con los datos.
   PomodoroManuscriptAppProvider({required PomodoroManuscriptAppRepository repository})
       : _repository = repository {
-    _loadInitialData(); // Carga los datos iniciales al crear el provider.
+    _loadInitialState(); // Carga el estado inicial al crear el provider
   }
 
   // --- Getters para acceder al estado desde la UI ---
-  AppConfig get appConfig => _appConfig;
-  OverallStats get overallStats => _overallStats;
-  PomodoroTimerState get timerState => _timerState;
-  Duration get remainingTime => _remainingTime;
-  int get currentCyclePomodoros => _currentCyclePomodoros;
-  bool get isTimerRunning => _isTimerRunning;
+  PomodoroSettings get currentSettings => _appState.settings;
+  ProductivityStats get currentStats => _appState.stats;
+  UserPreferences get currentUserPreferences => _appState.preferences;
+  PomodoroPhase get currentPhase => _currentPhase;
+  bool get isRunning => _isRunning;
+  int get pomodoroCyclesCompletedInSession => _pomodoroCyclesCompletedInSession;
+  bool get isInitialized => _isInitialized;
+  int get remainingSeconds => _remainingSeconds; // Exponer segundos restantes directamente
 
-  // --- Métodos de inicialización y carga de datos ---
-
-  /// Carga la configuración y estadísticas iniciales desde el repositorio.
-  Future<void> _loadInitialData() async {
-    _appConfig = await _repository.getAppConfig();
-    _overallStats = await _repository.getOverallStats();
-    // Inicializa el temporizador para la fase de trabajo con la configuración cargada.
-    _resetTimerForPhase(PomodoroTimerState.work);
-    notifyListeners(); // Notifica a los oyentes que el estado inicial ha sido cargado.
+  /// Retorna el tiempo restante formateado como "MM:SS".
+  String get remainingTimeFormatted {
+    final minutes = (_remainingSeconds ~/ 60).toString().padLeft(2, '0');
+    final seconds = (_remainingSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
   }
 
-  // --- Métodos para gestionar la configuración de la aplicación (AppConfig) ---
-
-  /// Actualiza la configuración de los tiempos del Pomodoro y la guarda en el repositorio.
-  Future<void> updatePomodoroSettings(PomodoroSettings newSettings) async {
-    _appConfig = _appConfig.copyWith(settings: newSettings);
-    await _repository.saveAppConfig(_appConfig);
-    // Si el temporizador está detenido, reinícialo con la nueva duración de trabajo.
-    if (_timerState == PomodoroTimerState.stopped) {
-      _resetTimerForPhase(PomodoroTimerState.work);
-    } else if (_timerState == PomodoroTimerState.work) {
-      // Si está en fase de trabajo, actualiza el tiempo restante si la duración de trabajo cambió.
-      // Esto podría interrumpir un Pomodoro en curso, pero asegura que la UI refleje la nueva configuración.
-      _remainingTime = Duration(minutes: newSettings.workDurationMinutes);
-    }
-    notifyListeners();
+  /// Carga el estado inicial de la aplicación desde el repositorio.
+  /// Si no hay estado guardado, utiliza el estado inicial por defecto.
+  Future<void> _loadInitialState() async {
+    _appState = await _repository.getAppState();
+    // Establece la duración inicial del temporizador según la configuración cargada
+    _remainingSeconds = _appState.settings.workDurationMinutes * 60;
+    _isInitialized = true;
+    notifyListeners(); // Notifica a los listeners que el estado ha sido inicializado
+    debugPrint('PomodoroManuscriptAppProvider: Estado inicial cargado: $_appState');
   }
-
-  /// Actualiza el perfil de usuario (nombre y saludo) y lo guarda en el repositorio.
-  Future<void> updateUserProfile(UserProfile newUserProfile) async {
-    _appConfig = _appConfig.copyWith(userProfile: newUserProfile);
-    await _repository.saveAppConfig(_appConfig);
-    notifyListeners();
-  }
-
-  // --- Métodos para gestionar las estadísticas generales (OverallStats) ---
-
-  /// Añade una estadística de sesión de Pomodoro al historial y actualiza las estadísticas generales.
-  /// Este método es llamado internamente por `_saveCurrentSessionStats`.
-  Future<void> _addPomodoroStatistic(PomodoroStatistic statistic) async {
-    await _repository.addPomodoroStatistic(statistic);
-    // Recarga las estadísticas completas para asegurar que el estado local esté sincronizado.
-    _overallStats = await _repository.getOverallStats();
-    notifyListeners();
-  }
-
-  /// Reinicia todas las estadísticas generales a sus valores por defecto.
-  Future<void> resetOverallStats() async {
-    _overallStats = const OverallStats();
-    await _repository.updateOverallStats(_overallStats);
-    notifyListeners();
-  }
-
-  // --- Métodos para gestionar el temporizador Pomodoro ---
 
   /// Inicia o reanuda el temporizador.
   void startTimer() {
-    if (_isTimerRunning) return; // Si ya está corriendo, no hacer nada.
-
-    // Si el tiempo ha terminado y no estamos en estado detenido,
-    // significa que una fase acaba de terminar y debemos pasar a la siguiente.
-    if (_remainingTime == Duration.zero && _timerState != PomodoroTimerState.stopped) {
-      _moveToNextPhase();
-      return;
+    if (!_isRunning) {
+      _isRunning = true;
+      _timer = Timer.periodic(const Duration(seconds: 1), _tick);
+      notifyListeners();
+      debugPrint('PomodoroManuscriptAppProvider: Temporizador iniciado. Fase: $_currentPhase, Restante: $_remainingSeconds s');
     }
-    // Si el temporizador está detenido, inicializa para la fase de trabajo.
-    if (_timerState == PomodoroTimerState.stopped) {
-      _resetTimerForPhase(PomodoroTimerState.work);
-    }
-
-    _isTimerRunning = true;
-    // Inicia un temporizador periódico que llama a `_tick` cada segundo.
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
-    notifyListeners();
   }
 
   /// Pausa el temporizador.
   void pauseTimer() {
-    if (!_isTimerRunning) return; // Si no está corriendo, no hacer nada.
-    _timer?.cancel(); // Cancela el temporizador actual.
-    _isTimerRunning = false;
-    _timerState = PomodoroTimerState.paused; // Establece el estado a pausado.
-    notifyListeners();
+    if (_isRunning) {
+      _timer?.cancel();
+      _timer = null;
+      _isRunning = false;
+      notifyListeners();
+      debugPrint('PomodoroManuscriptAppProvider: Temporizador pausado.');
+    }
   }
 
-  /// Detiene el temporizador, reinicia la sesión actual y guarda las estadísticas acumuladas.
-  void stopTimer() {
-    _timer?.cancel(); // Cancela cualquier temporizador activo.
-    _isTimerRunning = false;
-    _timerState = PomodoroTimerState.stopped; // Establece el estado a detenido.
-    _resetTimerForPhase(PomodoroTimerState.work); // Reinicia el tiempo restante a la duración de trabajo por defecto.
-
-    _saveCurrentSessionStats(); // Guarda las estadísticas acumuladas de la sesión actual.
-    _resetCurrentSessionStats(); // Reinicia los acumuladores de la sesión.
-    _currentCyclePomodoros = 0; // Reinicia el contador de Pomodoros en el ciclo.
+  /// Detiene el temporizador y lo reinicia a la duración inicial de la fase actual.
+  void resetTimer() {
+    _timer?.cancel();
+    _timer = null;
+    _isRunning = false;
+    _remainingSeconds = _getDurationForPhase(_currentPhase) * 60;
     notifyListeners();
+    debugPrint('PomodoroManuscriptAppProvider: Temporizador reiniciado para la fase actual: $_currentPhase.');
   }
 
-  /// Método que se ejecuta cada segundo mientras el temporizador está activo.
-  void _tick() {
-    if (_remainingTime.inSeconds > 0) {
-      _remainingTime = _remainingTime - const Duration(seconds: 1);
+  /// Avanza inmediatamente a la siguiente fase del ciclo Pomodoro.
+  /// El temporizador se pausa al saltar de fase.
+  void skipPhase() {
+    _timer?.cancel();
+    _timer = null;
+    _isRunning = false; // Asegura que el temporizador esté pausado al saltar
+    _moveToNextPhase(autoStartNext: false); // No auto-iniciar la siguiente fase al saltar
+    debugPrint('PomodoroManuscriptAppProvider: Fase saltada. Moviendo a la siguiente fase.');
+  }
+
+  /// Método llamado cada segundo por el [Timer].
+  /// Decrementa el tiempo restante y gestiona la transición de fase cuando el tiempo llega a cero.
+  void _tick(Timer timer) {
+    if (_remainingSeconds > 0) {
+      _remainingSeconds--;
       notifyListeners();
     } else {
-      // Si el tiempo llega a cero, cancela el temporizador y pasa a la siguiente fase.
+      // El temporizador ha llegado a cero, cancelar y mover a la siguiente fase
       _timer?.cancel();
+      _timer = null;
+      _isRunning = false; // El temporizador ya no está corriendo en este punto
+      _moveToNextPhase(autoStartNext: true); // Indica que la siguiente fase debe iniciarse automáticamente
+    }
+  }
+
+  /// Gestiona la transición a la siguiente fase del ciclo Pomodoro.
+  /// Actualiza las estadísticas, guarda el estado y reinicia el temporizador si `autoStartNext` es true.
+  Future<void> _moveToNextPhase({bool autoStartNext = false}) async {
+    int durationInMinutes;
+    int previousPhaseDurationSeconds = 0; // Para acumular estadísticas de la fase recién terminada
+
+    switch (_currentPhase) {
+      case PomodoroPhase.work:
+        // Acumula tiempo de trabajo y pomodoros completados
+        previousPhaseDurationSeconds = _appState.settings.workDurationMinutes * 60;
+        _appState = _appState.copyWith(
+          stats: _appState.stats.copyWith(
+            completedPomodoros: _appState.stats.completedPomodoros + 1,
+            totalWorkTimeSeconds: _appState.stats.totalWorkTimeSeconds + previousPhaseDurationSeconds,
+          ),
+        );
+        _pomodoroCyclesCompletedInSession++;
+
+        if (_pomodoroCyclesCompletedInSession % _appState.settings.pomodoroCyclesBeforeLongBreak == 0) {
+          _currentPhase = PomodoroPhase.longBreak;
+          durationInMinutes = _appState.settings.longBreakDurationMinutes;
+          debugPrint('PomodoroManuscriptAppProvider: Moviendo a Descanso Largo. Ciclos completados en sesión: $_pomodoroCyclesCompletedInSession');
+        } else {
+          _currentPhase = PomodoroPhase.shortBreak;
+          durationInMinutes = _appState.settings.shortBreakDurationMinutes;
+          debugPrint('PomodoroManuscriptAppProvider: Moviendo a Descanso Corto. Ciclos completados en sesión: $_pomodoroCyclesCompletedInSession');
+        }
+        break;
+
+      case PomodoroPhase.shortBreak:
+        // Acumula tiempo de descanso
+        previousPhaseDurationSeconds = _appState.settings.shortBreakDurationMinutes * 60;
+        _appState = _appState.copyWith(
+          stats: _appState.stats.copyWith(
+            totalBreakTimeSeconds: _appState.stats.totalBreakTimeSeconds + previousPhaseDurationSeconds,
+          ),
+        );
+        _currentPhase = PomodoroPhase.work;
+        durationInMinutes = _appState.settings.workDurationMinutes;
+        debugPrint('PomodoroManuscriptAppProvider: Moviendo a Trabajo después de Descanso Corto.');
+        break;
+
+      case PomodoroPhase.longBreak:
+        // Acumula tiempo de descanso
+        previousPhaseDurationSeconds = _appState.settings.longBreakDurationMinutes * 60;
+        _appState = _appState.copyWith(
+          stats: _appState.stats.copyWith(
+            totalBreakTimeSeconds: _appState.stats.totalBreakTimeSeconds + previousPhaseDurationSeconds,
+          ),
+        );
+        _currentPhase = PomodoroPhase.work;
+        durationInMinutes = _appState.settings.workDurationMinutes;
+        // Reinicia los ciclos de sesión después de un descanso largo
+        _pomodoroCyclesCompletedInSession = 0;
+        debugPrint('PomodoroManuscriptAppProvider: Moviendo a Trabajo después de Descanso Largo. Ciclos de sesión reiniciados.');
+        break;
+    }
+
+    _remainingSeconds = durationInMinutes * 60;
+    await _repository.updateAppState(_appState); // Guarda las estadísticas actualizadas
+    notifyListeners();
+
+    if (autoStartNext) {
+      startTimer(); // Reinicia el temporizador para la nueva fase
+    }
+  }
+
+  /// Actualiza la configuración de los tiempos del Pomodoro.
+  /// Persiste los cambios y actualiza el tiempo restante si el temporizador no está activo.
+  Future<void> updateSettings(PomodoroSettings newSettings) async {
+    _appState = _appState.copyWith(settings: newSettings);
+    await _repository.updateAppState(_appState);
+    // Si la duración de la fase actual cambió, actualiza los segundos restantes
+    // solo si el temporizador no está corriendo para evitar interrupciones.
+    if (!_isRunning) {
+      _remainingSeconds = _getDurationForPhase(_currentPhase) * 60;
+    }
+    notifyListeners();
+    debugPrint('PomodoroManuscriptAppProvider: Configuración actualizada: $newSettings');
+  }
+
+  /// Actualiza el nombre de usuario.
+  /// Persiste los cambios.
+  Future<void> updateUserName(String newName) async {
+    _appState = _appState.copyWith(preferences: _appState.preferences.copyWith(userName: newName));
+    await _repository.updateAppState(_appState);
+    notifyListeners();
+    debugPrint('PomodoroManuscriptAppProvider: Nombre de usuario actualizado a: $newName');
+  }
+
+  /// Método auxiliar para obtener la duración en minutos de una fase específica.
+  int _getDurationForPhase(PomodoroPhase phase) {
+    switch (phase) {
+      case PomodoroPhase.work:
+        return _appState.settings.workDurationMinutes;
+      case PomodoroPhase.shortBreak:
+        return _appState.settings.shortBreakDurationMinutes;
+      case PomodoroPhase.longBreak:
+        return _appState.settings.longBreakDurationMinutes;
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel(); // Cancela el temporizador cuando el provider es desechado
+    super.dispose();
+    debugPrint('PomodoroManuscriptAppProvider: Disposed.');
+  }
+}
