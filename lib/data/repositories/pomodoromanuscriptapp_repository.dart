@@ -1,101 +1,93 @@
-import 'dart:async'; // Para operaciones asíncronas con Future
-import '../datasources/pomodoromanuscriptapp_local_datasource.dart'; // Importa la fuente de datos local
-import '../models/pomodoromanuscriptapp_model.dart'; // Importa el modelo de datos
+import 'dart:async'; // Para Future
+import '../models/pomodoromanuscriptapp_model.dart'; // Importa los modelos
+import '../datasources/pomodoromanuscriptapp_local_datasource.dart'; // Importa la fuente de datos
 
-/// Interfaz abstracta para el repositorio de la aplicación PomodoroManuscriptApp.
-/// Define los contratos para interactuar con los datos del modelo,
-/// proporcionando una abstracción sobre la fuente de datos.
+/// Interfaz abstracta para el repositorio de la aplicación Pomodoro Manuscript.
+/// Define los contratos para interactuar con los datos de la aplicación.
 abstract class PomodoroManuscriptAppRepository {
-  /// Obtiene los datos completos del modelo PomodoroManuscriptAppModel.
-  /// Si no hay datos guardados, retorna un modelo con valores predeterminados.
-  Future<PomodoroManuscriptAppModel> getPomodoroData();
-
-  /// Guarda el modelo PomodoroManuscriptAppModel completo en la fuente de datos.
-  Future<void> savePomodoroData(PomodoroManuscriptAppModel model);
-
-  /// Actualiza el nombre de usuario y guarda el modelo.
-  Future<void> updateUserName(String newName);
-
-  /// Actualiza la configuración de los tiempos de Pomodoro y descansos, y guarda el modelo.
-  Future<void> updatePomodoroSettings({
-    int? pomodoroDuration,
-    int? shortBreakDuration,
-    int? longBreakDuration,
-    int? pomodorosBeforeLongBreak,
-  });
-
-  /// Registra la finalización de un Pomodoro, actualizando las estadísticas
-  /// de Pomodoros completados y tiempo de enfoque.
-  Future<void> recordPomodoroCompletion(int durationMinutes);
+  Future<AppConfig> getAppConfig();
+  Future<void> saveAppConfig(AppConfig config);
+  Future<OverallStats> getOverallStats();
+  Future<void> updateOverallStats(OverallStats stats);
+  Future<void> addPomodoroStatistic(PomodoroStatistic statistic);
 }
 
-/// Implementación concreta de [PomodoroManuscriptAppRepository].
-/// Coordina el acceso a los datos a través de la fuente de datos local.
+/// Implementación concreta del repositorio que usa la fuente de datos local.
 class PomodoroManuscriptAppRepositoryImpl
     implements PomodoroManuscriptAppRepository {
-  final PomodoroManuscriptAppLocalDataSource _localDataSource;
+  final PomodoroManuscriptAppLocalDataSource localDataSource;
 
-  /// Constructor que recibe una instancia de [PomodoroManuscriptAppLocalDataSource].
-  /// Esto permite la inyección de dependencias y facilita las pruebas.
-  PomodoroManuscriptAppRepositoryImpl(this._localDataSource);
+  PomodoroManuscriptAppRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<PomodoroManuscriptAppModel> getPomodoroData() async {
-    final PomodoroManuscriptAppModel? data = await _localDataSource.loadData();
-    // Si no hay datos guardados, retorna un nuevo modelo con valores predeterminados.
-    return data ?? PomodoroManuscriptAppModel();
-  }
-
-  @override
-  Future<void> savePomodoroData(PomodoroManuscriptAppModel model) async {
-    await _localDataSource.saveData(model);
+  Future<AppConfig> getAppConfig() async {
+    try {
+      return await localDataSource.getAppConfig();
+    } catch (e) {
+      // Aquí puedes manejar errores específicos, loggearlos, o relanzar
+      // una excepción de dominio si es necesario.
+      debugPrint('Repository Error getting AppConfig: $e');
+      return const AppConfig(); // Devuelve un valor por defecto en caso de error
+    }
   }
 
   @override
-  Future<void> updateUserName(String newName) async {
-    final PomodoroManuscriptAppModel currentData = await getPomodoroData();
-    currentData.userName = newName;
-    await savePomodoroData(currentData);
+  Future<void> saveAppConfig(AppConfig config) async {
+    try {
+      await localDataSource.saveAppConfig(config);
+    } catch (e) {
+      debugPrint('Repository Error saving AppConfig: $e');
+      rethrow; // Relanza el error para que la capa superior lo maneje
+    }
   }
 
   @override
-  Future<void> updatePomodoroSettings({
-    int? pomodoroDuration,
-    int? shortBreakDuration,
-    int? longBreakDuration,
-    int? pomodorosBeforeLongBreak,
-  }) async {
-    final PomodoroManuscriptAppModel currentData = await getPomodoroData();
-    if (pomodoroDuration != null)
-      currentData.pomodoroDuration = pomodoroDuration;
-    if (shortBreakDuration != null)
-      currentData.shortBreakDuration = shortBreakDuration;
-    if (longBreakDuration != null)
-      currentData.longBreakDuration = longBreakDuration;
-    if (pomodorosBeforeLongBreak != null)
-      currentData.pomodorosBeforeLongBreak = pomodorosBeforeLongBreak;
-    await savePomodoroData(currentData);
+  Future<OverallStats> getOverallStats() async {
+    try {
+      return await localDataSource.getOverallStats();
+    } catch (e) {
+      debugPrint('Repository Error getting OverallStats: $e');
+      return const OverallStats(); // Devuelve un valor por defecto en caso de error
+    }
   }
 
   @override
-  Future<void> recordPomodoroCompletion(int durationMinutes) async {
-    final PomodoroManuscriptAppModel currentData = await getPomodoroData();
-    final String todayKey = _formatDate(DateTime.now());
-
-    currentData.incrementDailyPomodoros(todayKey);
-    currentData.addDailyFocusTime(todayKey, durationMinutes);
-
-    await savePomodoroData(currentData);
+  Future<void> updateOverallStats(OverallStats stats) async {
+    try {
+      await localDataSource.saveOverallStats(stats);
+    } catch (e) {
+      debugPrint('Repository Error updating OverallStats: $e');
+      rethrow;
+    }
   }
 
-  /// Método auxiliar para formatear una fecha a una clave de cadena "YYYY-MM-DD".
-  String _formatDate(DateTime date) {
-    return '${date.year}-${_twoDigits(date.month)}-${_twoDigits(date.day)}';
-  }
+  @override
+  Future<void> addPomodoroStatistic(PomodoroStatistic statistic) async {
+    try {
+      // 1. Cargar las estadísticas actuales
+      OverallStats currentStats = await localDataSource.getOverallStats();
 
-  /// Método auxiliar para asegurar que los números de un solo dígito tengan un cero inicial.
-  String _twoDigits(int n) {
-    if (n >= 10) return '$n';
-    return '0$n';
+      // 2. Crear una nueva lista de estadísticas de sesión inmutable
+      final List<PomodoroStatistic> updatedSessionStats = List.from(
+        currentStats.sessionStatistics,
+      )..add(statistic);
+
+      // 3. Actualizar las estadísticas generales
+      final OverallStats newStats = currentStats.copyWith(
+        totalPomodorosCompleted:
+            currentStats.totalPomodorosCompleted + statistic.pomodorosCompleted,
+        totalWorkTimeMinutes:
+            currentStats.totalWorkTimeMinutes + statistic.workTimeMinutes,
+        totalBreakTimeMinutes:
+            currentStats.totalBreakTimeMinutes + statistic.breakTimeMinutes,
+        sessionStatistics: updatedSessionStats,
+      );
+
+      // 4. Guardar las estadísticas actualizadas
+      await localDataSource.saveOverallStats(newStats);
+    } catch (e) {
+      debugPrint('Repository Error adding PomodoroStatistic: $e');
+      rethrow;
+    }
   }
 }
