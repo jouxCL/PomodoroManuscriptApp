@@ -1,4 +1,4 @@
-¡Claro! Aquí tienes el archivo `main.dart` completo para tu "PomodoroManuscriptApp", siguiendo todas tus especificaciones.
+¡Claro que sí! Aquí tienes el archivo `main.dart` completo para tu "PomodoroManuscriptApp", siguiendo todos los requisitos especificados.
 
 import 'package:flutter/material.dart';
 
@@ -9,73 +9,80 @@ import 'package:pomodoro_manuscript_app/presentation/screens/settingsscreen.dart
 import 'package:pomodoro_manuscript_app/presentation/screens/statisticsscreen.dart';
 
 void main() {
-  runApp(const PomodoroManuscriptApp());
+  runApp(const MyApp());
 }
 
-class PomodoroManuscriptApp extends StatelessWidget {
-  const PomodoroManuscriptApp({super.key});
-
-  // Definición de las rutas nombradas para la aplicación
-  static const String welcomeRoute = '/'; // Pantalla inicial
-  static const String pomodoroRoute = '/pomodoro';
-  static const String settingsRoute = '/settings';
-  static const String statisticsRoute = '/statistics';
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Definimos los colores primario y de acento para mayor claridad
+    const Color primaryManuscriptColor = Color(0xFFF5F5DC); // Beige
+    const Color accentManuscriptColor = Color(0xFF8B4513); // Marrón oscuro
+
     return MaterialApp(
       title: 'Pomodoro Manuscript App',
       debugShowCheckedModeBanner: false, // Opcional: para quitar el banner de debug
-
-      // Configuración del tema de la aplicación
       theme: ThemeData(
-        // Color primario: #F5F5DC (Beige)
+        useMaterial3: true,
+        // Generamos el ColorScheme a partir del color primario (beige)
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFF5F5DC), // Color principal para generar la paleta
-          // Puedes personalizar más colores si lo deseas, por ejemplo:
-          // primary: const Color(0xFFF5F5DC),
-          // secondary: const Color(0xFF8B4513), // Color accent: #8B4513 (Marrón)
-          // tertiary: const Color(0xFF8B4513), // Usar el accent como terciario también
-          // surface: const Color(0xFFF5F5DC), // Fondo de superficies
-          // onPrimary: Colors.black87, // Color del texto sobre el color primario
-          // onSecondary: Colors.white, // Color del texto sobre el color secundario
+          seedColor: primaryManuscriptColor,
+          // Aunque fromSeed genera un esquema completo, podemos ajustar
+          // colores específicos si queremos que el accentManuscriptColor
+          // tenga un rol particular, por ejemplo, como secondary.
+          // Para este ejemplo, fromSeed ya hará un buen trabajo derivando.
+          // Si quisieras forzar el color de acento en un rol específico:
+          // secondary: accentManuscriptColor,
+          // onSecondary: Colors.white, // Color del texto sobre el acento
         ),
-        useMaterial3: true, // Habilitar Material Design 3
-        
-        // Puedes añadir más personalizaciones de texto, botones, etc. aquí
-        // Por ejemplo, para una estética de manuscrito, podrías definir una fuente específica:
-        // textTheme: GoogleFonts.merriweatherTextTheme(Theme.of(context).textTheme),
-        // (requeriría importar 'package:google_fonts/google_fonts.dart')
+        // Puedes personalizar más el tema aquí, por ejemplo, para fuentes
+        // que simulen un manuscrito o estilos de AppBar.
+        // Ejemplo de personalización de AppBar (opcional):
+        appBarTheme: const AppBarTheme(
+          backgroundColor: primaryManuscriptColor,
+          foregroundColor: accentManuscriptColor, // Color del texto/iconos en el AppBar
+          elevation: 0, // Sin sombra para un look más plano
+        ),
+        // Ejemplo de personalización de botones (opcional):
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: accentManuscriptColor,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
       ),
+      initialRoute: '/welcome', // La pantalla inicial de la aplicación
 
-      // Definición de la ruta inicial y las rutas nombradas
-      initialRoute: welcomeRoute,
+      // Definición de las rutas nombradas para todas las pantallas
       routes: {
-        welcomeRoute: (context) => const WelcomeScreen(),
-        pomodoroRoute: (context) => const PomodoroScreen(),
-        settingsRoute: (context) => const SettingsScreen(),
-        statisticsRoute: (context) => const StatisticsScreen(),
+        '/welcome': (context) => const WelcomeScreen(),
+        '/pomodoro': (context) => const PomodoroScreen(),
+        '/settings': (context) => const SettingsScreen(),
+        '/statistics': (context) => const StatisticsScreen(),
       },
     );
   }
 }
 
-**Explicación de los puntos clave:**
+**Explicación y Consideraciones:**
 
-1.  **`import 'package:flutter/material.dart';`**: La importación estándar para cualquier aplicación Flutter.
-2.  **Importaciones de pantallas**: Se importan todas las pantallas desde sus respectivas rutas dentro de `lib/presentation/screens/`. Asegúrate de que los nombres de archivo (`welcomescreen.dart`, `pomodoroscreen.dart`, etc.) coincidan exactamente.
-3.  **`void main() { runApp(const PomodoroManuscriptApp()); }`**: El punto de entrada de la aplicación, que ejecuta el widget raíz `PomodoroManuscriptApp`.
-4.  **`class PomodoroManuscriptApp extends StatelessWidget`**: El widget raíz de tu aplicación.
-5.  **Rutas Nombradas**:
-    *   Se definen constantes estáticas (`welcomeRoute`, `pomodoroRoute`, etc.) para las rutas. Esto ayuda a evitar errores de escritura y hace el código más legible.
-    *   `initialRoute: welcomeRoute,` establece `WelcomeScreen` como la primera pantalla que se muestra al iniciar la app.
-    *   El mapa `routes:` asocia cada nombre de ruta con el widget de la pantalla correspondiente.
-6.  **Theming (`ThemeData`)**:
-    *   `title: 'Pomodoro Manuscript App'`: El título que puede aparecer en el gestor de tareas del dispositivo.
-    *   `debugShowCheckedModeBanner: false`: Opcional, para ocultar la etiqueta "DEBUG" en la esquina superior derecha.
-    *   `useMaterial3: true`: Habilita las características y el diseño de Material Design 3.
-    *   `colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFF5F5DC))`: Esta es la parte clave para tu estética.
-        *   `seedColor` es el color principal (`#F5F5DC` - beige) a partir del cual Material 3 genera una paleta de colores completa y armoniosa (primario, secundario, terciario, de error, de superficie, y sus variantes "on").
-        *   Aunque el color accent `#8B4513` se menciona, `ColorScheme.fromSeed` lo incorporará de forma inteligente en la paleta generada. Si quisieras forzarlo a ser, por ejemplo, el `secondary` o `tertiary` color, podrías descomentar las líneas de `primary`, `secondary`, etc., y asignarlos explícitamente. Sin embargo, para empezar, `fromSeed` es suficiente y recomendado.
+1.  **`void main()` y `runApp()`**: El punto de entrada estándar de cualquier aplicación Flutter.
+2.  **`MyApp` como `StatelessWidget`**: Es el widget raíz que configura la aplicación.
+3.  **Importaciones**: Todas las pantallas se importan desde sus rutas especificadas (`package:pomodoro_manuscript_app/presentation/screens/...`). Asegúrate de que el nombre del paquete (`pomodoro_manuscript_app`) coincida con el nombre de tu proyecto en `pubspec.yaml`.
+4.  **`MaterialApp`**:
+    *   `title`: El título que aparece en el selector de tareas del sistema operativo.
+    *   `debugShowCheckedModeBanner: false`: Opcional, pero recomendado para producción para ocultar el banner de "DEBUG".
+    *   `theme`:
+        *   `useMaterial3: true`: Habilita el diseño Material 3, como se solicitó.
+        *   `colorScheme: ColorScheme.fromSeed(seedColor: primaryManuscriptColor)`: Genera un esquema de colores completo para la aplicación basándose en el color beige (`#F5F5DC`) como color principal. Flutter derivará automáticamente colores complementarios para `primary`, `secondary`, `tertiary`, `surface`, `background`, etc.
+        *   He añadido comentarios sobre cómo podrías usar `accentManuscriptColor` si quisieras asignarlo explícitamente a un rol como `secondary` dentro del `ColorScheme`, pero `fromSeed` ya hace un buen trabajo por sí solo.
+        *   También incluí ejemplos opcionales de `appBarTheme` y `elevatedButtonTheme` para dar una idea de cómo podrías empezar a aplicar la estética de manuscrito (colores, elevación, formas) de manera más consistente en toda la UI.
+    *   `initialRoute: '/welcome'`: Establece `WelcomeScreen` como la primera pantalla que se muestra al iniciar la app.
+    *   `routes`: Un mapa que define las rutas nombradas. Cada clave es el nombre de la ruta (ej. `'/pomodoro'`) y cada valor es una función que construye el widget de la pantalla correspondiente (ej. `(context) => const PomodoroScreen()`).
 
-Este `main.dart` debería compilar sin errores y proporcionar la estructura base y el tema visual que deseas para tu aplicación.
+Este `main.dart` debería compilar sin errores, asumiendo que los archivos de las pantallas existen en las rutas especificadas y son widgets básicos de Flutter (por ejemplo, `StatelessWidget` o `StatefulWidget`).
