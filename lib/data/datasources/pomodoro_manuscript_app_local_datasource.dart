@@ -1,70 +1,41 @@
-import 'dart:async';
-import 'dart:convert';
-import 'package:flutter/foundation.dart'; // Requerido para debugPrint
+import 'dart:async'; // Para Future
+import 'package:flutter/material.dart'; // Incluido según la regla, aunque no estrictamente necesario aquí.
 
-// NOTA: SharedPreferences es un paquete externo.
-// Para que este código funcione, necesitas añadir `shared_preferences: ^2.0.0` (o la versión más reciente)
-// a las dependencias de tu archivo `pubspec.yaml`.
-// Se utiliza porque es la forma estándar para el almacenamiento local de clave-valor en Flutter.
-import 'package:shared_preferences/shared_preferences.dart';
-
+// Importa el modelo de datos
 import '../models/pomodoro_manuscript_app_model.dart';
 
-/// Interfaz abstracta para la fuente de datos local de la aplicación Pomodoro.
-abstract class PomodoroManuscriptAppLocalDataSource {
-  /// Carga el estado completo de la aplicación desde el almacenamiento local.
-  /// Retorna null si no se encuentra ningún estado guardado.
-  Future<PomodoroManuscriptAppState?> loadAppState();
+/// NOTA IMPORTANTE:
+/// Debido a la estricta restricción "Usa solo: package:flutter/material.dart y dart:async",
+/// una solución de almacenamiento local verdaderamente persistente como SharedPreferences
+/// o el acceso al sistema de archivos (dart:io) no puede ser utilizada, ya que requieren
+/// paquetes o librerías adicionales no listadas explícitamente.
+///
+/// Esta implementación proporciona una fuente de datos local EN MEMORIA.
+/// Los datos NO persistirán entre los reinicios de la aplicación.
+///
+/// El modelo `AppState` incluye métodos `fromJson` y `toJson`, pero estos
+/// no son utilizados por esta fuente de datos en memoria debido a las restricciones
+/// de paquetes que impiden el uso de `dart:convert` para serialización/deserialización.
+/// En un escenario del mundo real con persistencia, estos métodos serían cruciales.
+class PomodoroManuscriptAppLocalDataSource {
+  // Almacenamiento en memoria para el AppState
+  AppState _currentAppState = const AppState(); // Inicializa con valores por defecto
 
-  /// Guarda el estado completo de la aplicación en el almacenamiento local.
-  Future<void> saveAppState(PomodoroManuscriptAppState appState);
-}
+  PomodoroManuscriptAppLocalDataSource();
 
-/// Implementación concreta de [PomodoroManuscriptAppLocalDataSource] usando SharedPreferences.
-class PomodoroManuscriptAppLocalDataSourceImpl
-    implements PomodoroManuscriptAppLocalDataSource {
-  static const String _appStateKey = 'pomodoro_manuscript_app_state';
-
-  @override
-  Future<PomodoroManuscriptAppState?> loadAppState() async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String? jsonString = prefs.getString(_appStateKey);
-
-      if (jsonString != null) {
-        final Map<String, dynamic> jsonMap =
-            json.decode(jsonString) as Map<String, dynamic>;
-        debugPrint(
-          'PomodoroManuscriptAppLocalDataSource: Estado de la aplicación cargado.',
-        );
-        return PomodoroManuscriptAppState.fromJson(jsonMap);
-      }
-      debugPrint(
-        'PomodoroManuscriptAppLocalDataSource: No se encontró estado de la aplicación en el almacenamiento local.',
-      );
-      return null;
-    } catch (e) {
-      debugPrint(
-        'PomodoroManuscriptAppLocalDataSource: Error al cargar el estado de la aplicación desde el almacenamiento local: $e',
-      );
-      return null;
-    }
+  /// Recupera el [AppState] actual del almacenamiento en memoria.
+  Future<AppState> getAppState() async {
+    // Simula un pequeño retraso para una operación asíncrona
+    await Future.delayed(const Duration(milliseconds: 100));
+    return _currentAppState;
   }
 
-  @override
-  Future<void> saveAppState(PomodoroManuscriptAppState appState) async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String jsonString = json.encode(appState.toJson());
-      await prefs.setString(_appStateKey, jsonString);
-      debugPrint(
-        'PomodoroManuscriptAppLocalDataSource: Estado de la aplicación guardado exitosamente.',
-      );
-    } catch (e) {
-      debugPrint(
-        'PomodoroManuscriptAppLocalDataSource: Error al guardar el estado de la aplicación en el almacenamiento local: $e',
-      );
-      rethrow; // Re-lanza la excepción para permitir que el repositorio la maneje o registre
-    }
+  /// Guarda el [AppState] dado en el almacenamiento en memoria.
+  Future<void> saveAppState(AppState state) async {
+    // Simula un pequeño retraso para una operación asíncrona
+    await Future.delayed(const Duration(milliseconds: 100));
+    _currentAppState = state;
   }
 }
+
+---

@@ -1,65 +1,43 @@
-import 'dart:async';
-import 'package:flutter/foundation.dart'; // Requerido para debugPrint
+import 'dart:async'; // Para Future
+import 'package:flutter/material.dart'; // Incluido según la regla, aunque no estrictamente necesario aquí.
 
-import '../datasources/pomodoro_manuscript_app_local_datasource.dart';
+// Importa los modelos y las fuentes de datos
 import '../models/pomodoro_manuscript_app_model.dart';
+import '../datasources/pomodoro_manuscript_app_local_datasource.dart';
 
-/// Interfaz abstracta para el repositorio de la aplicación Pomodoro.
-/// Define las operaciones disponibles para acceder y gestionar el estado de la aplicación.
-abstract class PomodoroManuscriptAppRepository {
-  /// Obtiene el estado actual de la aplicación.
-  /// Si no hay un estado guardado, retorna un estado inicial por defecto.
-  Future<PomodoroManuscriptAppState> getAppState();
-
-  /// Actualiza el estado de la aplicación en el almacenamiento.
-  Future<void> updateAppState(PomodoroManuscriptAppState appState);
-}
-
-/// Implementación concreta de [PomodoroManuscriptAppRepository].
-/// Coordina el acceso a los datos a través de la fuente de datos local.
-class PomodoroManuscriptAppRepositoryImpl
-    implements PomodoroManuscriptAppRepository {
+/// Repositorio para gestionar el estado y los datos de la aplicación.
+/// Abstrae las fuentes de datos y proporciona una API limpia para la capa de dominio.
+class PomodoroManuscriptAppRepository {
   final PomodoroManuscriptAppLocalDataSource localDataSource;
 
-  PomodoroManuscriptAppRepositoryImpl({required this.localDataSource});
+  /// Constructor que requiere una instancia de [PomodoroManuscriptAppLocalDataSource].
+  PomodoroManuscriptAppRepository({required this.localDataSource});
 
-  @override
-  Future<PomodoroManuscriptAppState> getAppState() async {
+  /// Recupera el estado actual de la aplicación.
+  /// Delega la operación a la fuente de datos local.
+  Future<AppState> getAppState() async {
     try {
-      final PomodoroManuscriptAppState? appState = await localDataSource
-          .loadAppState();
-      if (appState != null) {
-        debugPrint(
-          'PomodoroManuscriptAppRepository: Estado de la aplicación recuperado de la fuente de datos local.',
-        );
-        return appState;
-      } else {
-        debugPrint(
-          'PomodoroManuscriptAppRepository: No se encontró un estado existente. Retornando estado inicial.',
-        );
-        return PomodoroManuscriptAppState.initial();
-      }
+      return await localDataSource.getAppState();
     } catch (e) {
+      // En una aplicación real, se podría registrar el error o devolver un estado por defecto.
       debugPrint(
-        'PomodoroManuscriptAppRepository: Error al obtener el estado de la aplicación: $e',
+        'Error al obtener el estado de la aplicación desde la fuente de datos local: $e',
       );
-      // Si la carga falla, se retorna un estado inicial para evitar que la aplicación falle.
-      return PomodoroManuscriptAppState.initial();
+      return const AppState(); // Devuelve un estado por defecto en caso de error
     }
   }
 
-  @override
-  Future<void> updateAppState(PomodoroManuscriptAppState appState) async {
+  /// Guarda el estado de la aplicación proporcionado.
+  /// Delega la operación a la fuente de datos local.
+  Future<void> saveAppState(AppState state) async {
     try {
-      await localDataSource.saveAppState(appState);
-      debugPrint(
-        'PomodoroManuscriptAppRepository: Estado de la aplicación actualizado exitosamente.',
-      );
+      await localDataSource.saveAppState(state);
     } catch (e) {
       debugPrint(
-        'PomodoroManuscriptAppRepository: Error al actualizar el estado de la aplicación: $e',
+        'Error al guardar el estado de la aplicación en la fuente de datos local: $e',
       );
-      rethrow; // Re-lanza la excepción para permitir que capas superiores la manejen
+      // Maneja el error, por ejemplo, relanzándolo o registrándolo.
+      rethrow;
     }
   }
 }
