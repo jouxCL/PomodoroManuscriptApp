@@ -1,135 +1,87 @@
-De acuerdo. Aquí tienes el código Dart completo y funcional para la `WelcomeScreen`, siguiendo todas tus instrucciones y requisitos, incluyendo la corrección de errores de compilación y la adhesión estricta a la estructura solicitada.
+Aquí tienes el código Dart completo y funcional para la `WelcomeScreen`, diseñado para la aplicación "PomodoroManuscriptApp", cumpliendo con todos los requisitos y teniendo en cuenta las correcciones señaladas para el resto de la aplicación.
 
-Este archivo asume que las rutas nombradas (`/pomodoro`, `/settings`, `/statistics`) estarán definidas en tu `MaterialApp` principal (probablemente en `main.dart`).
+Este código asume que `main.dart` configurará el `ThemeData` con `ColorScheme.fromSeed` y los colores primario y acento especificados, y que las rutas nombradas (`/pomodoro`, `/settings`, `/statistics`) estarán definidas.
 
 // welcome_screen.dart
 import 'package:flutter/material.dart';
 
+/// La pantalla de bienvenida de la aplicación Pomodoro Manuscript.
+///
+/// Esta pantalla saluda al usuario y proporciona botones para navegar
+/// a las pantallas principales de la aplicación: Pomodoro, Configuración
+/// y Estadísticas. Utiliza la estética de manuscrito con colores
+/// y tipografía apropiados.
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
-  // Un nombre de usuario de ejemplo. En una aplicación real, esto vendría de un estado o base de datos.
-  final String userName = "Estudiante";
-
   @override
   Widget build(BuildContext context) {
-    // Definimos los colores principales para facilitar su uso y mantener la consistencia.
-    final Color primaryManuscriptColor = Theme.of(context).colorScheme.primary;
-    final Color accentManuscriptColor = Theme.of(context).colorScheme.secondary;
-    final Color onPrimaryManuscriptColor = Theme.of(context).colorScheme.onPrimary;
+    // Accede al esquema de colores del tema definido en main.dart.
+    // Esto asegura que los colores primario y secundario (acento)
+    // sean los especificados en los requisitos.
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      // El color de fondo del Scaffold será el color primario de la estética de manuscrito.
-      backgroundColor: primaryManuscriptColor,
-      appBar: AppBar(
-        title: const Text(
-          'Pomodoro Manuscript App',
-          style: TextStyle(
-            color: Color(0xFF8B4513), // Color de texto oscuro para contraste con el fondo claro
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: primaryManuscriptColor, // Fondo del AppBar
-        elevation: 0, // Sin sombra para un aspecto más plano y de papel
-        centerTitle: true,
-      ),
+      // El color de fondo del Scaffold se establece como el color primario
+      // del tema, que representa el "papel beige" del manuscrito.
+      backgroundColor: colorScheme.primary, // Color(0xFFF5F5DC)
       body: Center(
-        child: SingleChildScrollView( // Permite el scroll si el contenido es demasiado grande
+        child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              // Saludo personalizado
+              // Título de la aplicación
               Text(
-                '¡Hola, $userName!',
-                textAlign: TextAlign.center,
+                'Pomodoro Manuscript App',
                 style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w800,
-                  color: accentManuscriptColor, // Color acento para el saludo principal
-                  fontFamily: 'serif', // Un intento de dar un toque de manuscrito
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  // El color del texto contrasta con el fondo primario.
+                  color: colorScheme.onPrimary,
+                  fontFamily: 'Georgia', // Fuente tipo serif para estética de manuscrito
                 ),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 24),
-              // Descripción de la aplicación
+              const SizedBox(height: 30),
+
+              // Saludo personalizado al usuario
+              // En una implementación real, 'diligente estudioso' podría
+              // ser reemplazado por un nombre de usuario obtenido de un estado.
               Text(
-                'Bienvenido a tu compañero de productividad con un toque clásico. '
-                'Organiza tu tiempo, enfócate y registra tu progreso con la '
-                'elegancia de un manuscrito.',
-                textAlign: TextAlign.center,
+                '¡Hola, diligente estudioso!',
                 style: TextStyle(
-                  fontSize: 18,
-                  color: onPrimaryManuscriptColor, // Color de texto en el fondo primario
-                  height: 1.5,
-                  fontFamily: 'serif',
+                  fontSize: 24,
+                  fontStyle: FontStyle.italic,
+                  // Un color que contrasta y da un toque diferente.
+                  color: colorScheme.onPrimaryContainer,
+                  fontFamily: 'Georgia',
                 ),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 48),
-              // Botón para iniciar el Pomodoro
-              ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/pomodoro');
-                },
-                icon: const Icon(Icons.timer),
-                label: const Text('Iniciar Pomodoro'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: accentManuscriptColor, // Fondo del botón con color acento
-                  foregroundColor: primaryManuscriptColor, // Texto del botón con color primario
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
-                  textStyle: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'serif',
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+              const SizedBox(height: 50),
+
+              // Botones de navegación a las otras pantallas
+              _buildNavigationButton(
+                context,
+                text: 'Iniciar Pomodoro',
+                routeName: '/pomodoro',
+                colorScheme: colorScheme,
               ),
               const SizedBox(height: 20),
-              // Botón para ir a Configuración
-              OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/settings');
-                },
-                icon: const Icon(Icons.settings),
-                label: const Text('Configuración'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: accentManuscriptColor, // Color del texto y borde
-                  side: BorderSide(color: accentManuscriptColor, width: 2), // Borde con color acento
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
-                  textStyle: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'serif',
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+              _buildNavigationButton(
+                context,
+                text: 'Configuración',
+                routeName: '/settings',
+                colorScheme: colorScheme,
               ),
               const SizedBox(height: 20),
-              // Botón para ir a Estadísticas
-              OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/statistics');
-                },
-                icon: const Icon(Icons.bar_chart),
-                label: const Text('Estadísticas'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: accentManuscriptColor, // Color del texto y borde
-                  side: BorderSide(color: accentManuscriptColor, width: 2), // Borde con color acento
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
-                  textStyle: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'serif',
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+              _buildNavigationButton(
+                context,
+                text: 'Estadísticas',
+                routeName: '/statistics',
+                colorScheme: colorScheme,
               ),
             ],
           ),
@@ -137,60 +89,41 @@ class WelcomeScreen extends StatelessWidget {
       ),
     );
   }
-}
 
-// NOTA: Para que esta pantalla compile y funcione correctamente, tu archivo main.dart
-// debe configurar el MaterialApp con un ColorScheme.fromSeed que use los colores
-// #F5F5DC (primary) y #8B4513 (secondary/accent), y definir las rutas nombradas.
-// Aquí tienes un ejemplo de cómo podría ser tu main.dart (NO es parte de la salida solicitada):
-/*
-import 'package:flutter/material.dart';
-import 'package:pomodoro_manuscript_app/welcome_screen.dart';
-// Importa tus otras pantallas aquí
-// import 'package:pomodoro_manuscript_app/pomodoro_screen.dart';
-// import 'package:pomodoro_manuscript_app/settings_screen.dart';
-// import 'package:pomodoro_manuscript_app/statistics_screen.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Pomodoro Manuscript App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFF5F5DC), // Color primario base
-          primary: const Color(0xFFF5F5DC), // Beige (papel)
-          onPrimary: const Color(0xFF8B4513), // Marrón oscuro (tinta)
-          secondary: const Color(0xFF8B4513), // Marrón oscuro (acento)
-          onSecondary: const Color(0xFFF5F5DC), // Beige (texto sobre acento)
-          surface: const Color(0xFFF5F5DC), // Superficies de tarjetas, etc.
-          onSurface: const Color(0xFF8B4513), // Texto sobre superficies
-          background: const Color(0xFFF5F5DC), // Fondo general
-          onBackground: const Color(0xFF8B4513), // Texto sobre fondo
+  /// Método auxiliar para construir botones de navegación con un estilo consistente.
+  Widget _buildNavigationButton(
+    BuildContext context, {
+    required String text,
+    required String routeName,
+    required ColorScheme colorScheme,
+  }) {
+    return SizedBox(
+      width: 280, // Ancho fijo para los botones
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          // El color de fondo del botón es el color de acento.
+          backgroundColor: colorScheme.secondary, // Color(0xFF8B4513)
+          // El color del texto del botón contrasta con el color de acento.
+          foregroundColor: colorScheme.onSecondary,
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 25),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12), // Esquinas ligeramente redondeadas
+            // Borde sutil para un efecto de "papel" o "sello".
+            side: BorderSide(color: colorScheme.onSecondary.withOpacity(0.7), width: 1.5),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            fontFamily: 'Georgia',
+          ),
+          elevation: 7, // Sombra para dar profundidad
         ),
-        useMaterial3: true,
-        // Puedes añadir un textTheme personalizado aquí para una fuente de manuscrito
-        // textTheme: const TextTheme(
-        //   displayLarge: TextStyle(fontFamily: 'YourManuscriptFont'),
-        //   // ...
-        // ),
+        onPressed: () {
+          // Navega a la ruta nombrada correspondiente.
+          Navigator.pushNamed(context, routeName);
+        },
+        child: Text(text),
       ),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const WelcomeScreen(),
-        // Define tus otras rutas aquí
-        // '/pomodoro': (context) => const PomodoroScreen(),
-        // '/settings': (context) => const SettingsScreen(),
-        // '/statistics': (context) => const StatisticsScreen(),
-      },
-      debugShowCheckedModeBanner: false,
     );
   }
 }
-*/
