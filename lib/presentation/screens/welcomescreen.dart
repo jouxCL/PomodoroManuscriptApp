@@ -1,244 +1,126 @@
-¡Absolutamente! Aquí tienes el código completo y funcional para la `WelcomeScreen`, junto con la estructura de archivos necesaria (`main.dart`, `pomodoro_provider.dart`, y las otras pantallas como stubs funcionales) para que la aplicación compile, funcione y cumpla con todos los requisitos, incluyendo la corrección crítica de la retroalimentación.
+Aquí tienes el código Dart completo y funcional para la `WelcomeScreen` de tu aplicación "PomodoroManuscriptApp", siguiendo estrictamente todos los requisitos, incluyendo el uso de Material Design 3 y la adhesión a la estética de manuscrito.
 
-He estructurado la respuesta en los siguientes archivos, como si estuvieran en tu proyecto Flutter:
+Este código asume que tu `main.dart` configurará el `ThemeData` global con `ColorScheme.fromSeed` usando los colores `#F5F5DC` (primary) y `#8B4513` (accent), y que las rutas nombradas `/pomodoro`, `/settings` y `/statistics` estarán definidas.
 
-1.  **`lib/main.dart`**: El punto de entrada central de la aplicación, donde se configura el tema, las rutas y el proveedor de estado.
-2.  **`lib/providers/pomodoro_provider.dart`**: La implementación del `ChangeNotifier` para la gestión de estado de la aplicación.
-3.  **`lib/screens/welcome_screen.dart`**: La pantalla de bienvenida solicitada, con navegación a las otras pantallas.
-4.  **`lib/screens/pomodoro_screen.dart`**: Una implementación básica que consume el estado del proveedor.
-5.  **`lib/screens/settings_screen.dart`**: Una implementación básica que consume y modifica el estado del proveedor.
-6.  **`lib/screens/statistics_screen.dart`**: Una implementación básica que consume el estado del proveedor.
-
----
-
-### 1. `lib/main.dart`
-
-Este archivo centraliza el punto de entrada, la configuración del tema Material 3, las rutas nombradas y la inicialización del proveedor de estado.
-
-// lib/main.dart
+// lib/welcome_screen.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import 'package:pomodoro_manuscript_app/providers/pomodoro_provider.dart';
-import 'package:pomodoro_manuscript_app/screens/welcome_screen.dart';
-import 'package:pomodoro_manuscript_app/screens/pomodoro_screen.dart';
-import 'package:pomodoro_manuscript_app/screens/settings_screen.dart';
-import 'package:pomodoro_manuscript_app/screens/statistics_screen.dart';
-
-void main() {
-  runApp(
-    // Envuelve la aplicación con ChangeNotifierProvider para la gestión de estado
-    ChangeNotifierProvider(
-      create: (context) => PomodoroProvider(),
-      child: const MyApp(),
-    ),
-  );
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    // Colores principales de la aplicación
-    const Color primaryColor = Color(0xFFF5F5DC); // Beige
-    const Color accentColor = Color(0xFF8B4513); // Marrón
-
-    return MaterialApp(
-      title: 'Pomodoro Manuscript App',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        // Configuración de Material Design 3 con ColorScheme.fromSeed
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: primaryColor, // Color base para generar el esquema
-          primary: primaryColor, // Beige para el fondo principal
-          onPrimary: accentColor, // Marrón para texto/iconos sobre el primary
-          secondary: accentColor, // Marrón para elementos de acento (botones)
-          onSecondary: Colors.white, // Blanco para texto/iconos sobre el secondary
-          surface: primaryColor, // Superficies como tarjetas, diálogos
-          onSurface: accentColor, // Texto sobre superficies
-          background: primaryColor, // Fondo general de la app
-          onBackground: accentColor, // Texto sobre el fondo
-          // Puedes ajustar otros colores si es necesario para un control más fino
-        ),
-        useMaterial3: true,
-        // Configuración de fuente para la estética de manuscrito (ej. Georgia o Merriweather)
-        // Asegúrate de añadir la fuente a tu pubspec.yaml si no es una fuente por defecto.
-        fontFamily: 'Georgia', // O 'Merriweather' si la configuras en pubspec.yaml
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          displayMedium: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          displaySmall: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          headlineLarge: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          headlineMedium: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          headlineSmall: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          titleLarge: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          titleMedium: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          titleSmall: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          bodyLarge: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          bodyMedium: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          bodySmall: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          labelLarge: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          labelMedium: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          labelSmall: TextStyle(fontFamily: 'Georgia', color: accentColor),
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: primaryColor,
-          foregroundColor: accentColor,
-          elevation: 0,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: accentColor,
-            foregroundColor: Colors.white,
-            textStyle: const TextStyle(fontFamily: 'Georgia', fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
-      initialRoute: WelcomeScreen.routeName, // La pantalla de bienvenida como ruta inicial
-      routes: {
-        WelcomeScreen.routeName: (context) => const WelcomeScreen(),
-        PomodoroScreen.routeName: (context) => const PomodoroScreen(),
-        SettingsScreen.routeName: (context) => const SettingsScreen(),
-        StatisticsScreen.routeName: (context) => const StatisticsScreen(),
-      },
-    );
-  }
-}
-
-### 2. `lib/providers/pomodoro_provider.dart`
-
-Este archivo define el `ChangeNotifier` que gestionará el estado de la aplicación.
-
-// lib/providers/pomodoro_provider.dart
-import 'package:flutter/material.dart';
-
-class PomodoroProvider extends ChangeNotifier {
-  // --- Configuración de Tiempos ---
-  int _pomodoroDuration = 25; // minutos
-  int _shortBreakDuration = 5; // minutos
-  int _longBreakDuration = 15; // minutos
-  int _pomodoroCycles = 4; // ciclos antes de un descanso largo
-
-  // --- Estado del Temporizador ---
-  String _currentPhase = 'Pomodoro'; // 'Pomodoro', 'Short Break', 'Long Break'
-  int _remainingTime = 25 * 60; // segundos
-  bool _isRunning = false;
-  int _completedPomodoros = 0; // Pomodoros completados en el ciclo actual
-  int _totalCompletedPomodoros = 0; // Total de pomodoros completados históricamente
-
-  // --- Estadísticas ---
-  List<DateTime> _pomodoroCompletionDates = []; // Fechas de finalización de pomodoros
-
-  // Getters
-  int get pomodoroDuration => _pomodoroDuration;
-  int get shortBreakDuration => _shortBreakDuration;
-  int get longBreakDuration => _longBreakDuration;
-  int get pomodoroCycles => _pomodoroCycles;
-
-  String get currentPhase => _currentPhase;
-  int get remainingTime => _remainingTime;
-  bool get isRunning => _isRunning;
-  int get completedPomodoros => _completedPomodoros;
-  int get totalCompletedPomodoros => _totalCompletedPomodoros;
-  List<DateTime> get pomodoroCompletionDates => _pomodoroCompletionDates;
-
-  // Setters para la configuración (ejemplo, en SettingsScreen)
-  void setPomodoroDuration(int duration) {
-    _pomodoroDuration = duration;
-    notifyListeners();
-  }
-
-  void setShortBreakDuration(int duration) {
-    _shortBreakDuration = duration;
-    notifyListeners();
-  }
-
-  void setLongBreakDuration(int duration) {
-    _longBreakDuration = duration;
-    notifyListeners();
-  }
-
-  void setPomodoroCycles(int cycles) {
-    _pomodoroCycles = cycles;
-    notifyListeners();
-  }
-
-  // --- Métodos de Control del Temporizador (ejemplo, en PomodoroScreen) ---
-  void startTimer() {
-    _isRunning = true;
-    notifyListeners();
-    // Lógica real del temporizador (Timer.periodic) iría aquí,
-    // actualizando _remainingTime y llamando a notifyListeners()
-    // en cada tick.
-  }
-
-  void pauseTimer() {
-    _isRunning = false;
-    notifyListeners();
-  }
-
-  void resetTimer() {
-    _isRunning = false;
-    _currentPhase = 'Pomodoro';
-    _remainingTime = _pomodoroDuration * 60;
-    _completedPomodoros = 0;
-    notifyListeners();
-  }
-
-  void nextPhase() {
-    // Lógica para avanzar a la siguiente fase (descanso corto, largo, etc.)
-    if (_currentPhase == 'Pomodoro') {
-      _completedPomodoros++;
-      _totalCompletedPomodoros++;
-      _pomodoroCompletionDates.add(DateTime.now());
-
-      if (_completedPomodoros % _pomodoroCycles == 0) {
-        _currentPhase = 'Long Break';
-        _remainingTime = _longBreakDuration * 60;
-      } else {
-        _currentPhase = 'Short Break';
-        _remainingTime = _shortBreakDuration * 60;
-      }
-    } else {
-      _currentPhase = 'Pomodoro';
-      _remainingTime = _pomodoroDuration * 60;
-    }
-    _isRunning = false; // Pausar al cambiar de fase
-    notifyListeners();
-  }
-
-  // --- Métodos para Estadísticas (ejemplo, en StatisticsScreen) ---
-  // Puedes añadir más lógica para filtrar por día, semana, etc.
-  int getPomodorosCompletedToday() {
-    final today = DateTime.now();
-    return _pomodoroCompletionDates.where((date) =>
-        date.year == today.year &&
-        date.month == today.month &&
-        date.day == today.day).length;
-  }
-}
-
-### 3. `lib/screens/welcome_screen.dart`
-
-Esta es la pantalla de bienvenida solicitada, con la estética de manuscrito y navegación a las otras pantallas.
-
-// lib/screens/welcome_screen.dart
-import 'package:flutter/material.dart';
-
-// Importa las rutas de las otras pantallas para usarlas en la navegación
-import 'package:pomodoro_manuscript_app/screens/pomodoro_screen.dart';
-import 'package:pomodoro_manuscript_app/screens/settings_screen.dart';
-import 'package:pomodoro_manuscript_app/screens/statistics_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
-  static const String routeName = '/welcome';
-
   const WelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Accede al esquema de colores y al tema de texto definido globalmente en main.dart
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final TextTheme textTheme = Theme.of(context).textTheme;
 
-    // Define estilos de texto para la estética de manuscrito.
-    // Se usa 'Georgia' como ejemplo de fuente serif. Para una fuente específica
+    return Scaffold(
+      // El color de fondo principal de la pantalla es el beige del manuscrito
+      backgroundColor: colorScheme.primary,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              // Título de la aplicación y mensaje de bienvenida
+              Text(
+                'Welcome to Pomodoro Manuscript!',
+                textAlign: TextAlign.center,
+                style: textTheme.headlineMedium?.copyWith(
+                  color: colorScheme.onPrimary, // Texto en color marrón (accent)
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Your personalized productivity companion with a classic touch.',
+                textAlign: TextAlign.center,
+                style: textTheme.titleMedium?.copyWith(
+                  color: colorScheme.onPrimary.withOpacity(0.8), // Texto en marrón más suave
+                ),
+              ),
+              const SizedBox(height: 48),
+
+              // Botón para iniciar el temporizador Pomodoro
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Navega a la pantalla PomodoroScreen usando una ruta nombrada
+                  Navigator.pushNamed(context, '/pomodoro');
+                },
+                icon: Icon(Icons.timer, color: colorScheme.primary), // Icono en color beige
+                label: Text(
+                  'Start Pomodoro',
+                  style: textTheme.titleLarge?.copyWith(
+                    color: colorScheme.primary, // Texto en color beige
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.secondary, // Fondo del botón en color marrón (accent)
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Botones de navegación a Configuración y Estadísticas
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        // Navega a la pantalla SettingsScreen usando una ruta nombrada
+                        Navigator.pushNamed(context, '/settings');
+                      },
+                      icon: Icon(Icons.settings, color: colorScheme.secondary), // Icono en color marrón
+                      label: Text(
+                        'Settings',
+                        style: textTheme.titleMedium?.copyWith(
+                          color: colorScheme.secondary, // Texto en color marrón
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: colorScheme.secondary), // Borde en color marrón
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        // Navega a la pantalla StatisticsScreen usando una ruta nombrada
+                        Navigator.pushNamed(context, '/statistics');
+                      },
+                      icon: Icon(Icons.bar_chart, color: colorScheme.secondary), // Icono en color marrón
+                      label: Text(
+                        'Statistics',
+                        style: textTheme.titleMedium?.copyWith(
+                          color: colorScheme.secondary, // Texto en color marrón
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: colorScheme.secondary), // Borde en color marrón
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
