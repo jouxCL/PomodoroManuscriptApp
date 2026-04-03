@@ -1,158 +1,23 @@
-Aquí tienes el código Dart completo y funcional para la `WelcomeScreen`, diseñado para tu aplicación "PomodoroManuscriptApp".
-
-Para que este código compile y funcione correctamente, especialmente la navegación entre pantallas, necesitarás la siguiente estructura de archivos en tu proyecto Flutter:
-
-lib/
-├── main.dart
-├── welcome_screen.dart
-├── pomodoro_screen.dart
-├── settings_screen.dart
-└── statistics_screen.dart
-
-A continuación, se presenta el código para cada uno de estos archivos, siguiendo estrictamente todos tus requisitos, incluida la nota especial del auditor.
+Aquí tienes el código Dart completo y funcional para la `WelcomeScreen` de tu aplicación "PomodoroManuscriptApp", junto con un archivo `main.dart` y pantallas de marcador de posición para demostrar la configuración del tema, las rutas nombradas y la integración del `PomodoroManuscriptProvider` según tus requisitos.
 
 ---
 
-### `lib/welcome_screen.dart`
+**1. `lib/main.dart` (Configuración principal de la aplicación)**
 
-Este es el archivo principal solicitado, que define la pantalla de bienvenida.
+Este archivo configura el `MaterialApp`, el tema con Material Design 3, las rutas nombradas y el `ChangeNotifierProvider` para el estado de la aplicación.
 
+// lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    // Definición de los colores principales de la app
-    final Color primaryColor = const Color(0xFFF5F5DC); // Beige (color principal)
-    final Color accentColor = const Color(0xFF8B4513); // Marrón (color de acento)
-
-    return Scaffold(
-      backgroundColor: primaryColor, // Fondo beige para la estética de manuscrito
-      body: Center(
-        child: SingleChildScrollView( // Permite desplazamiento si el contenido es demasiado grande
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              // Título de la aplicación
-              Text(
-                'Pomodoro Manuscript',
-                style: TextStyle(
-                  fontFamily: 'Georgia', // Fuente serif para evocar un estilo clásico
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
-                  color: accentColor, // Color de tinta marrón
-                  height: 1.2,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 30),
-
-              // Saludo personalizado al usuario
-              Text(
-                'Welcome, Scribe!', // Saludo genérico, se podría personalizar con un nombre de usuario
-                style: TextStyle(
-                  fontFamily: 'Palatino', // Otra fuente serif para variedad
-                  fontSize: 28,
-                  fontWeight: FontWeight.w600,
-                  color: accentColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-
-              // Descripción de la aplicación
-              Text(
-                'Your dedicated companion for focused work and mindful breaks. Embrace the rhythm of productivity with a touch of timeless elegance.',
-                style: TextStyle(
-                  fontFamily: 'Times New Roman', // Fuente clásica para el cuerpo del texto
-                  fontSize: 18,
-                  color: accentColor.withOpacity(0.8), // Un poco más claro que el título
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 50),
-
-              // Botones de navegación a las otras pantallas
-              _buildNavigationButton(
-                context,
-                'Start Pomodoro',
-                '/pomodoro', // Ruta nombrada para la pantalla de Pomodoro
-                primaryColor,
-                accentColor,
-              ),
-              const SizedBox(height: 16),
-              _buildNavigationButton(
-                context,
-                'Settings',
-                '/settings', // Ruta nombrada para la pantalla de Configuración
-                primaryColor,
-                accentColor,
-              ),
-              const SizedBox(height: 16),
-              _buildNavigationButton(
-                context,
-                'Statistics',
-                '/statistics', // Ruta nombrada para la pantalla de Estadísticas
-                primaryColor,
-                accentColor,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Método auxiliar para crear botones de navegación consistentes
-  Widget _buildNavigationButton(
-    BuildContext context,
-    String text,
-    String routeName,
-    Color primaryColor,
-    Color accentColor,
-  ) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: accentColor, // Fondo del botón marrón
-        foregroundColor: primaryColor, // Color del texto del botón beige
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 18),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: BorderSide(color: primaryColor.withOpacity(0.5), width: 1), // Borde sutil
-        ),
-        elevation: 5, // Sombra para dar profundidad
-      ),
-      onPressed: () {
-        Navigator.of(context).pushNamed(routeName);
-      },
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontFamily: 'Verdana', // Fuente limpia para los botones
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
-
----
-
-### `lib/main.dart`
-
-Este archivo configura la aplicación Flutter, define el tema de Material Design 3 y las rutas nombradas, importando las pantallas desde sus respectivos archivos, tal como lo exige la nota del auditor.
-
-import 'package:flutter/material.dart';
+// Importa las pantallas de la aplicación
 import 'package:pomodoro_manuscript_app/welcome_screen.dart';
 import 'package:pomodoro_manuscript_app/pomodoro_screen.dart';
 import 'package:pomodoro_manuscript_app/settings_screen.dart';
 import 'package:pomodoro_manuscript_app/statistics_screen.dart';
+
+// Importa el proveedor de estado
+import 'package:pomodoro_manuscript_app/pomodoro_manuscript_provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -163,169 +28,170 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Definición de los colores principales de la app
-    final Color primaryColor = const Color(0xFFF5F5DC); // Beige
-    final Color accentColor = const Color(0xFF8B4513); // Marrón
+    // Define los colores principales de la aplicación
+    const Color primaryColor = Color(0xFFF5F5DC); // Beige (papel de manuscrito)
+    const Color accentColor = Color(0xFF8B4513); // Marrón (tinta)
 
-    return MaterialApp(
-      title: 'Pomodoro Manuscript App',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        // Configuración de Material Design 3 con ColorScheme.fromSeed
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: primaryColor, // Color base para generar el esquema
-          primary: primaryColor,
-          onPrimary: accentColor,
-          secondary: accentColor,
-          onSecondary: primaryColor,
-          surface: primaryColor,
-          onSurface: accentColor,
-          background: primaryColor,
-          onBackground: accentColor,
-          error: Colors.red,
-          onError: Colors.white,
-          brightness: Brightness.light,
+    return ChangeNotifierProvider(
+      create: (context) => PomodoroManuscriptProvider(),
+      child: MaterialApp(
+        title: 'Pomodoro Manuscript App',
+        debugShowCheckedModeBanner: false, // Opcional: para quitar el banner de debug
+        theme: ThemeData(
+          useMaterial3: true, // Habilita Material Design 3
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: primaryColor, // Color base para generar el esquema
+            primary: primaryColor, // Color principal (fondo de papel)
+            onPrimary: const Color(0xFF3E2723), // Color para texto/iconos sobre primary (marrón oscuro)
+            secondary: accentColor, // Color secundario (tinta, acentos)
+            onSecondary: const Color(0xFFFFFFFF), // Color para texto/iconos sobre secondary (blanco)
+            surface: primaryColor, // Color de superficie (tarjetas, diálogos)
+            onSurface: const Color(0xFF3E2723), // Color para texto/iconos sobre surface
+            // Puedes definir más colores aquí si es necesario (ej. error, background)
+          ),
+          // Configuración de la fuente para una estética de manuscrito
+          fontFamily: 'Merriweather', // Una fuente serif elegante
+          textTheme: const TextTheme(
+            displayLarge: TextStyle(fontFamily: 'Merriweather'),
+            displayMedium: TextStyle(fontFamily: 'Merriweather'),
+            displaySmall: TextStyle(fontFamily: 'Merriweather'),
+            headlineLarge: TextStyle(fontFamily: 'Merriweather'),
+            headlineMedium: TextStyle(fontFamily: 'Merriweather'),
+            headlineSmall: TextStyle(fontFamily: 'Merriweather'),
+            titleLarge: TextStyle(fontFamily: 'Merriweather'),
+            titleMedium: TextStyle(fontFamily: 'Merriweather'),
+            titleSmall: TextStyle(fontFamily: 'Merriweather'),
+            bodyLarge: TextStyle(fontFamily: 'Merriweather'),
+            bodyMedium: TextStyle(fontFamily: 'Merriweather'),
+            bodySmall: TextStyle(fontFamily: 'Merriweather'),
+            labelLarge: TextStyle(fontFamily: 'Merriweather'),
+            labelMedium: TextStyle(fontFamily: 'Merriweather'),
+            labelSmall: TextStyle(fontFamily: 'Merriweather'),
+          ),
         ),
-        useMaterial3: true,
-        // Tema de texto para aplicar la estética de manuscrito globalmente
-        textTheme: TextTheme(
-          displayLarge: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          displayMedium: TextStyle(fontFamily: 'Palatino', color: accentColor),
-          displaySmall: TextStyle(fontFamily: 'Times New Roman', color: accentColor),
-          headlineLarge: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          headlineMedium: TextStyle(fontFamily: 'Palatino', color: accentColor),
-          headlineSmall: TextStyle(fontFamily: 'Times New Roman', color: accentColor),
-          titleLarge: TextStyle(fontFamily: 'Georgia', color: accentColor),
-          titleMedium: TextStyle(fontFamily: 'Palatino', color: accentColor),
-          titleSmall: TextStyle(fontFamily: 'Times New Roman', color: accentColor),
-          bodyLarge: TextStyle(fontFamily: 'Times New Roman', color: accentColor),
-          bodyMedium: TextStyle(fontFamily: 'Times New Roman', color: accentColor),
-          bodySmall: TextStyle(fontFamily: 'Times New Roman', color: accentColor),
-          labelLarge: TextStyle(fontFamily: 'Verdana', color: accentColor),
-          labelMedium: TextStyle(fontFamily: 'Verdana', color: accentColor),
-          labelSmall: TextStyle(fontFamily: 'Verdana', color: accentColor),
-        ).apply(
-          bodyColor: accentColor, // Color de texto por defecto
-          displayColor: accentColor, // Color de texto por defecto para titulares
+        initialRoute: '/', // La pantalla de bienvenida es la ruta inicial
+        routes: {
+          '/': (context) => const WelcomeScreen(),
+          '/pomodoro': (context) => const PomodoroScreen(),
+          '/settings': (context) => const SettingsScreen(),
+          '/statistics': (context) => const StatisticsScreen(),
+        },
+      ),
+    );
+  }
+}
+
+---
+
+**2. `lib/welcome_screen.dart` (La pantalla de bienvenida solicitada)**
+
+Este es el código de la `WelcomeScreen` que cumple con todos los requisitos especificados.
+
+// lib/welcome_screen.dart
+import 'package:flutter/material.dart';
+
+class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Accede al esquema de colores del tema global
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      backgroundColor: colorScheme.primary, // Fondo beige (papel)
+      appBar: AppBar(
+        title: Text(
+          'Bienvenido',
+          style: TextStyle(
+            color: colorScheme.onPrimary, // Texto oscuro sobre el fondo beige
+            fontFamily: 'Merriweather', // Consistencia de fuente
+          ),
         ),
-        // Tema para ElevatedButtons
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: accentColor,
-            foregroundColor: primaryColor,
-            textStyle: const TextStyle(fontFamily: 'Verdana', fontSize: 18, fontWeight: FontWeight.w600),
+        backgroundColor: colorScheme.primary, // AppBar coincide con el fondo
+        elevation: 0, // Sin sombra para un aspecto de papel plano
+        centerTitle: true,
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              // Título de la aplicación
+              Text(
+                'Pomodoro Manuscript',
+                style: TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.secondary, // Color de tinta (marrón)
+                  fontFamily: 'Merriweather', // Fuente para el título
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              // Mensaje de bienvenida
+              Text(
+                'Tu compañero para la productividad con un toque clásico.',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: colorScheme.onPrimary, // Texto oscuro sobre el fondo beige
+                  fontFamily: 'Merriweather',
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+              // Botones de navegación
+              _buildNavigationButton(
+                context,
+                'Iniciar Pomodoro',
+                '/pomodoro',
+                colorScheme,
+              ),
+              const SizedBox(height: 16),
+              _buildNavigationButton(
+                context,
+                'Configuración',
+                '/settings',
+                colorScheme,
+              ),
+              const SizedBox(height: 16),
+              _buildNavigationButton(
+                context,
+                'Estadísticas',
+                '/statistics',
+                colorScheme,
+              ),
+            ],
           ),
         ),
       ),
-      initialRoute: '/', // La WelcomeScreen es la pantalla inicial
-      routes: {
-        '/': (context) => const WelcomeScreen(),
-        '/pomodoro': (context) => const PomodoroScreen(),
-        '/settings': (context) => const SettingsScreen(),
-        '/statistics': (context) => const StatisticsScreen(),
-      },
     );
   }
-}
 
----
-
-### `lib/pomodoro_screen.dart`
-
-Una implementación mínima para la pantalla del temporizador Pomodoro.
-
-import 'package:flutter/material.dart';
-
-class PomodoroScreen extends StatelessWidget {
-  const PomodoroScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final Color primaryColor = const Color(0xFFF5F5DC); // Beige
-    final Color accentColor = const Color(0xFF8B4513); // Marrón
-
-    return Scaffold(
-      backgroundColor: primaryColor,
-      appBar: AppBar(
-        title: Text('Pomodoro Timer', style: TextStyle(color: primaryColor, fontFamily: 'Georgia')),
-        backgroundColor: accentColor,
-        iconTheme: IconThemeData(color: primaryColor), // Color de los iconos del AppBar
-      ),
-      body: Center(
-        child: Text(
-          'Pomodoro Timer Screen\n(Work in Progress)',
-          style: TextStyle(fontSize: 24, color: accentColor, fontFamily: 'Palatino'),
-          textAlign: TextAlign.center,
+  // Widget auxiliar para construir botones de navegación consistentes
+  Widget _buildNavigationButton(
+    BuildContext context,
+    String text,
+    String routeName,
+    ColorScheme colorScheme,
+  ) {
+    return SizedBox(
+      width: 250, // Ancho fijo para los botones
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: colorScheme.secondary, // Fondo del botón (marrón)
+          foregroundColor: colorScheme.onSecondary, // Color del texto del botón (blanco)
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8), // Bordes ligeramente redondeados
+          ),
+          textStyle: TextStyle(
+            fontSize: 18,
+            fontFamily: 'Merriweather',
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      ),
-    );
-  }
-}
-
----
-
-### `lib/settings_screen.dart`
-
-Una implementación mínima para la pantalla de configuración.
-
-import 'package:flutter/material.dart';
-
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final Color primaryColor = const Color(0xFFF5F5DC); // Beige
-    final Color accentColor = const Color(0xFF8B4513); // Marrón
-
-    return Scaffold(
-      backgroundColor: primaryColor,
-      appBar: AppBar(
-        title: Text('Settings', style: TextStyle(color: primaryColor, fontFamily: 'Georgia')),
-        backgroundColor: accentColor,
-        iconTheme: IconThemeData(color: primaryColor),
-      ),
-      body: Center(
-        child: Text(
-          'Settings Screen\n(Work in Progress)',
-          style: TextStyle(fontSize: 24, color: accentColor, fontFamily: 'Palatino'),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-}
-
----
-
-### `lib/statistics_screen.dart`
-
-Una implementación mínima para la pantalla de estadísticas.
-
-import 'package:flutter/material.dart';
-
-class StatisticsScreen extends StatelessWidget {
-  const StatisticsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final Color primaryColor = const Color(0xFFF5F5DC); // Beige
-    final Color accentColor = const Color(0xFF8B4513); // Marrón
-
-    return Scaffold(
-      backgroundColor: primaryColor,
-      appBar: AppBar(
-        title: Text('Statistics', style: TextStyle(color: primaryColor, fontFamily: 'Georgia')),
-        backgroundColor: accentColor,
-        iconTheme: IconThemeData(color: primaryColor),
-      ),
-      body: Center(
-        child: Text(
-          'Statistics Screen\n(Work in Progress)',
-          style: TextStyle(fontSize: 24, color: accentColor, fontFamily: 'Palatino'),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-}
+        onPressed: () {
+          Navigator.pushNamed(context, routeName); // Navega a la ruta
