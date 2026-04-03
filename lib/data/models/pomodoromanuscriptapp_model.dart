@@ -1,106 +1,110 @@
-import 'package:flutter/material.dart'; // Requerido por el usuario, aunque no estrictamente necesario para este modelo.
-import 'dart:async'; // Requerido por el usuario, aunque no estrictamente necesario para este modelo.
+import 'dart:convert'; // Para codificación/decodificación JSON
+import 'package:flutter/material.dart'; // Incluido según la instrucción, aunque no se usa directamente en el modelo de datos.
 
 /// Modelo de datos principal para la aplicación PomodoroManuscriptApp.
-/// Contiene la configuración del temporizador, estadísticas de productividad
-/// e información del usuario.
-class PomodoroManuscriptData {
-  // --- Configuración del Temporizador ---
-  /// Duración de una sesión de Pomodoro en minutos.
-  final int pomodoroDuration;
+/// Contiene la configuración del usuario y las estadísticas de productividad.
+class PomodoroManuscriptAppModel {
+  // --- Configuración del usuario ---
+  int pomodoroDuration; // Duración de un Pomodoro en minutos (ej. 25)
+  int shortBreakDuration; // Duración de un descanso corto en minutos (ej. 5)
+  int longBreakDuration; // Duración de un descanso largo en minutos (ej. 15)
+  int
+  pomodorosBeforeLongBreak; // Número de Pomodoros antes de un descanso largo (ej. 4)
+  String userName; // Nombre del usuario para el saludo personalizado
 
-  /// Duración de un descanso corto en minutos.
-  final int shortBreakDuration;
+  // --- Estadísticas de productividad ---
+  int totalPomodorosCompleted; // Número total de Pomodoros completados
+  int totalTimeFocused; // Tiempo total de enfoque en minutos
+  Map<String, int>
+  dailyPomodorosCompleted; // Pomodoros completados por día ("YYYY-MM-DD": count)
+  Map<String, int>
+  dailyFocusTime; // Tiempo de enfoque por día en minutos ("YYYY-MM-DD": minutes)
 
-  /// Duración de un descanso largo en minutos.
-  final int longBreakDuration;
+  /// Constructor para el modelo de datos.
+  /// Proporciona valores predeterminados si no se especifican.
+  PomodoroManuscriptAppModel({
+    this.pomodoroDuration = 25,
+    this.shortBreakDuration = 5,
+    this.longBreakDuration = 15,
+    this.pomodorosBeforeLongBreak = 4,
+    this.userName = 'Usuario',
+    this.totalPomodorosCompleted = 0,
+    this.totalTimeFocused = 0,
+    Map<String, int>? dailyPomodorosCompleted,
+    Map<String, int>? dailyFocusTime,
+  }) : dailyPomodorosCompleted = dailyPomodorosCompleted ?? {},
+       dailyFocusTime = dailyFocusTime ?? {};
 
-  /// Número de descansos cortos antes de un descanso largo.
-  final int longBreakInterval;
-
-  // --- Estadísticas de Productividad ---
-  /// Número total de Pomodoros completados.
-  final int completedPomodoros;
-
-  /// Tiempo total acumulado en sesiones de Pomodoro en minutos.
-  final int totalPomodoroTime;
-
-  /// Tiempo total acumulado en descansos (cortos y largos) en minutos.
-  final int totalBreakTime;
-
-  // --- Información del Usuario ---
-  /// Nombre del usuario para saludos personalizados.
-  final String userName;
-
-  /// Indica si es la primera vez que el usuario inicia la aplicación.
-  /// Se usa para preguntar el nombre del usuario y mostrar el saludo inicial.
-  final bool isFirstLaunch;
-
-  PomodoroManuscriptData({
-    required this.pomodoroDuration,
-    required this.shortBreakDuration,
-    required this.longBreakDuration,
-    required this.longBreakInterval,
-    required this.completedPomodoros,
-    required this.totalPomodoroTime,
-    required this.totalBreakTime,
-    required this.userName,
-    required this.isFirstLaunch,
-  });
-
-  /// Crea una nueva instancia de `PomodoroManuscriptData` a partir de un mapa JSON.
-  factory PomodoroManuscriptData.fromJson(Map<String, dynamic> json) {
-    return PomodoroManuscriptData(
-      pomodoroDuration: json['pomodoroDuration'] as int,
-      shortBreakDuration: json['shortBreakDuration'] as int,
-      longBreakDuration: json['longBreakDuration'] as int,
-      longBreakInterval: json['longBreakInterval'] as int,
-      completedPomodoros: json['completedPomodoros'] as int,
-      totalPomodoroTime: json['totalPomodoroTime'] as int,
-      totalBreakTime: json['totalBreakTime'] as int,
-      userName: json['userName'] as String,
-      isFirstLaunch: json['isFirstLaunch'] as bool,
+  /// Crea una instancia de [PomodoroManuscriptAppModel] a partir de un mapa JSON.
+  /// Se encarga de la deserialización de los datos, incluyendo los mapas de estadísticas.
+  factory PomodoroManuscriptAppModel.fromJson(Map<String, dynamic> json) {
+    return PomodoroManuscriptAppModel(
+      pomodoroDuration: json['pomodoroDuration'] as int? ?? 25,
+      shortBreakDuration: json['shortBreakDuration'] as int? ?? 5,
+      longBreakDuration: json['longBreakDuration'] as int? ?? 15,
+      pomodorosBeforeLongBreak: json['pomodorosBeforeLongBreak'] as int? ?? 4,
+      userName: json['userName'] as String? ?? 'Usuario',
+      totalPomodorosCompleted: json['totalPomodorosCompleted'] as int? ?? 0,
+      totalTimeFocused: json['totalTimeFocused'] as int? ?? 0,
+      dailyPomodorosCompleted: (json['dailyPomodorosCompleted'] != null)
+          ? Map<String, int>.from(
+              jsonDecode(
+                json['dailyPomodorosCompleted'] as String,
+              ).map<String, int>((k, v) => MapEntry(k, v as int)),
+            )
+          : {},
+      dailyFocusTime: (json['dailyFocusTime'] != null)
+          ? Map<String, int>.from(
+              jsonDecode(
+                json['dailyFocusTime'] as String,
+              ).map<String, int>((k, v) => MapEntry(k, v as int)),
+            )
+          : {},
     );
   }
 
-  /// Convierte la instancia actual de `PomodoroManuscriptData` a un mapa JSON.
+  /// Convierte la instancia de [PomodoroManuscriptAppModel] a un mapa JSON.
+  /// Se encarga de la serialización de los datos, incluyendo los mapas de estadísticas a cadenas JSON.
   Map<String, dynamic> toJson() {
     return {
       'pomodoroDuration': pomodoroDuration,
       'shortBreakDuration': shortBreakDuration,
       'longBreakDuration': longBreakDuration,
-      'longBreakInterval': longBreakInterval,
-      'completedPomodoros': completedPomodoros,
-      'totalPomodoroTime': totalPomodoroTime,
-      'totalBreakTime': totalBreakTime,
+      'pomodorosBeforeLongBreak': pomodorosBeforeLongBreak,
       'userName': userName,
-      'isFirstLaunch': isFirstLaunch,
+      'totalPomodorosCompleted': totalPomodorosCompleted,
+      'totalTimeFocused': totalTimeFocused,
+      'dailyPomodorosCompleted': jsonEncode(dailyPomodorosCompleted),
+      'dailyFocusTime': jsonEncode(dailyFocusTime),
     };
   }
 
-  /// Crea una copia de esta instancia de `PomodoroManuscriptData` con los valores
-  /// proporcionados, manteniendo los valores originales si no se especifican.
-  PomodoroManuscriptData copyWith({
-    int? pomodoroDuration,
-    int? shortBreakDuration,
-    int? longBreakDuration,
-    int? longBreakInterval,
-    int? completedPomodoros,
-    int? totalPomodoroTime,
-    int? totalBreakTime,
-    String? userName,
-    bool? isFirstLaunch,
-  }) {
-    return PomodoroManuscriptData(
-      pomodoroDuration: pomodoroDuration ?? this.pomodoroDuration,
-      shortBreakDuration: shortBreakDuration ?? this.shortBreakDuration,
-      longBreakDuration: longBreakDuration ?? this.longBreakDuration,
-      longBreakInterval: longBreakInterval ?? this.longBreakInterval,
-      completedPomodoros: completedPomodoros ?? this.completedPomodoros,
-      totalPomodoroTime: totalPomodoroTime ?? this.totalPomodoroTime,
-      totalBreakTime: totalBreakTime ?? this.totalBreakTime,
-      userName: userName ?? this.userName,
-      isFirstLaunch: isFirstLaunch ?? this.isFirstLaunch,
-    );
+  /// Incrementa el contador de Pomodoros completados para un día específico
+  /// y actualiza el total general.
+  void incrementDailyPomodoros(String dateKey) {
+    dailyPomodorosCompleted[dateKey] =
+        (dailyPomodorosCompleted[dateKey] ?? 0) + 1;
+    totalPomodorosCompleted++;
+  }
+
+  /// Añade tiempo de enfoque a un día específico y actualiza el total general.
+  void addDailyFocusTime(String dateKey, int minutes) {
+    dailyFocusTime[dateKey] = (dailyFocusTime[dateKey] ?? 0) + minutes;
+    totalTimeFocused += minutes;
+  }
+
+  @override
+  String toString() {
+    return 'PomodoroManuscriptAppModel(\n'
+        '  pomodoroDuration: $pomodoroDuration,\n'
+        '  shortBreakDuration: $shortBreakDuration,\n'
+        '  longBreakDuration: $longBreakDuration,\n'
+        '  pomodorosBeforeLongBreak: $pomodorosBeforeLongBreak,\n'
+        '  userName: $userName,\n'
+        '  totalPomodorosCompleted: $totalPomodorosCompleted,\n'
+        '  totalTimeFocused: $totalTimeFocused,\n'
+        '  dailyPomodorosCompleted: $dailyPomodorosCompleted,\n'
+        '  dailyFocusTime: $dailyFocusTime\n'
+        ')';
   }
 }

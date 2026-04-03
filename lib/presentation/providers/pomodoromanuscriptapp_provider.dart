@@ -1,285 +1,141 @@
-Aquí tienes el código Dart completo para el `ChangeNotifier` provider de estado para tu aplicación "PomodoroManuscriptApp", siguiendo estrictamente tus requisitos y utilizando **EXCLUSIVAMENTE** los modelos y repositorios proporcionados.
+Aquí tienes el código Dart completo para el `ChangeNotifier` del estado de la aplicación "PomodoroManuscriptApp", utilizando exclusivamente los modelos y repositorios que proporcionaste.
 
-Este provider gestionará la lógica del temporizador, la configuración, las estadísticas y la información del usuario, interactuando directamente con el `PomodoroManuscriptRepository`.
+Este `Provider` gestiona el estado de la aplicación, interactuando con el `PomodoroManuscriptAppRepository` para cargar, guardar y actualizar los datos, y notificando a sus oyentes (widgets de la UI) sobre cualquier cambio.
 
-// lib/providers/pomodoro_manuscript_provider.dart
-
-import 'package:flutter/material.dart';
-import 'dart:async'; // Necesario para el Timer
-
-// Importa los modelos y repositorios proporcionados
-import '../models/pomodoromanuscriptapp_model.dart';
-import '../datasources/pomodoromanuscriptapp_local_datasource.dart'; // Necesario para instanciar el repositorio
-import '../repositories/pomodoromanuscriptapp_repository.dart';
-
-/// Enum para representar el estado actual del temporizador.
-enum TimerState {
-  stopped,
-  running,
-  paused,
-}
-
-/// Enum para representar el tipo de ciclo actual del Pomodoro.
-enum CycleType {
-  pomodoro,
-  shortBreak,
-  longBreak,
-}
+// lib/providers/pomodoro_manuscript_app_provider.dart
+import 'package:flutter/material.dart'; // Para ChangeNotifier y debugPrint
+import '../models/pomodoromanuscriptapp_model.dart'; // Importa el modelo de datos
+import '../repositories/pomodoromanuscriptapp_repository.dart'; // Importa el repositorio
 
 /// Provider de estado para la aplicación PomodoroManuscriptApp.
-/// Gestiona la configuración, estadísticas, información del usuario y la lógica del temporizador.
-class PomodoroManuscriptProvider with ChangeNotifier {
-  final PomodoroManuscriptRepository _repository;
+/// Gestiona la configuración, estadísticas y lógica de negocio,
+/// interactuando con el repositorio para la persistencia de datos.
+class PomodoroManuscriptAppProvider with ChangeNotifier {
+  final PomodoroManuscriptAppRepository _repository;
 
-  // --- Estado interno de la aplicación (basado en PomodoroManuscriptData) ---
-  PomodoroManuscriptData? _data; // Contiene la configuración, estadísticas y usuario
-  bool _isLoading = true; // Indica si los datos iniciales están cargando
+  // El modelo de datos que representa el estado actual de la aplicación.
+  // Se inicializa con un modelo por defecto y luego se carga desde el repositorio.
+  PomodoroManuscriptAppModel _model;
 
-  // --- Estado específico del temporizador ---
-  Timer? _timer; // El temporizador real de Dart
-  TimerState _timerState = TimerState.stopped; // Estado actual del temporizador
-  CycleType _currentCycleType = CycleType.pomodoro; // Tipo de ciclo actual (Pomodoro, descanso corto/largo)
-  int _remainingTime = 0; // Tiempo restante en segundos para el ciclo actual
-  int _pomodorosInCycle = 0; // Contador de Pomodoros completados en el ciclo actual para el descanso largo
+  // Bandera para indicar si los datos están siendo cargados.
+  bool _isLoading = false;
 
-  /// Constructor del provider. Requiere una instancia de [PomodoroManuscriptRepository].
-  /// Inicia la carga de los datos iniciales de la aplicación.
-  PomodoroManuscriptProvider(this._repository) {
+  /// Constructor del provider.
+  /// Requiere una instancia de [PomodoroManuscriptAppRepository] para interactuar con los datos.
+  PomodoroManuscriptAppProvider(this._repository)
+      : _model = PomodoroManuscriptAppModel() {
+    // Carga los datos iniciales al crear el provider.
     _loadInitialData();
   }
 
   // --- Getters para acceder al estado desde la UI ---
 
+  /// Retorna el modelo completo de la aplicación.
+  PomodoroManuscriptAppModel get model => _model;
+
+  /// Retorna el estado de carga de los datos.
   bool get isLoading => _isLoading;
-  String get userName => _data?.userName ?? '';
-  bool get isFirstLaunch => _data?.isFirstLaunch ?? true;
 
-  // Configuración del temporizador
-  int get pomodoroDurationMinutes => _data?.pomodoroDuration ?? 25;
-  int get shortBreakDurationMinutes => _data?.shortBreakDuration ?? 5;
-  int get longBreakDurationMinutes => _data?.longBreakDuration ?? 15;
-  int get longBreakInterval => _data?.longBreakInterval ?? 3;
+  /// Duración de un Pomodoro en minutos.
+  int get pomodoroDuration => _model.pomodoroDuration;
 
-  // Estadísticas de productividad
-  int get completedPomodoros => _data?.completedPomodoros ?? 0;
-  int get totalPomodoroTimeMinutes => _data?.totalPomodoroTime ?? 0;
-  int get totalBreakTimeMinutes => _data?.totalBreakTime ?? 0;
+  /// Duración de un descanso corto en minutos.
+  int get shortBreakDuration => _model.shortBreakDuration;
 
-  // Estado actual del temporizador
-  TimerState get timerState => _timerState;
-  CycleType get currentCycleType => _currentCycleType;
-  int get remainingTimeSeconds => _remainingTime; // Para mostrar la cuenta regresiva
-  int get currentCyclePomodoros => _pomodorosInCycle; // Para mostrar el progreso hacia el descanso largo
+  /// Duración de un descanso largo en minutos.
+  int get longBreakDuration => _model.longBreakDuration;
 
-  // --- Métodos de inicialización ---
+  /// Número de Pomodoros antes de un descanso largo.
+  int get pomodorosBeforeLongBreak => _model.pomodorosBeforeLongBreak;
+
+  /// Nombre del usuario para el saludo personalizado.
+  String get userName => _model.userName;
+
+  /// Número total de Pomodoros completados.
+  int get totalPomodorosCompleted => _model.totalPomodorosCompleted;
+
+  /// Tiempo total de enfoque en minutos.
+  int get totalTimeFocused => _model.totalTimeFocused;
+
+  /// Pomodoros completados por día ("YYYY-MM-DD": count).
+  Map<String, int> get dailyPomodorosCompleted => _model.dailyPomodorosCompleted;
+
+  /// Tiempo de enfoque por día en minutos ("YYYY-MM-DD": minutes).
+  Map<String, int> get dailyFocusTime => _model.dailyFocusTime;
+
+  // --- Métodos para modificar el estado y persistir los cambios ---
 
   /// Carga los datos iniciales de la aplicación desde el repositorio.
-  /// Establece el tiempo inicial del temporizador y notifica a los listeners.
+  /// Establece el estado de carga y notifica a los oyentes.
   Future<void> _loadInitialData() async {
     _isLoading = true;
-    notifyListeners();
+    notifyListeners(); // Notifica que la carga ha comenzado.
 
-    _data = await _repository.getPomodoroData();
-    // Inicializa el tiempo restante con la duración del Pomodoro por defecto
-    _setTimerForPhase(_currentCycleType);
-
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  // --- Métodos de gestión del temporizador ---
-
-  /// Establece la duración del temporizador y el tipo de ciclo actual.
-  /// Convierte la duración de minutos a segundos.
-  void _setTimerForPhase(CycleType type) {
-    _currentCycleType = type;
-    int durationInMinutes;
-    switch (type) {
-      case CycleType.pomodoro:
-        durationInMinutes = pomodoroDurationMinutes;
-        break;
-      case CycleType.shortBreak:
-        durationInMinutes = shortBreakDurationMinutes;
-        break;
-      case CycleType.longBreak:
-        durationInMinutes = longBreakDurationMinutes;
-        break;
-    }
-    _remainingTime = durationInMinutes * 60; // Convertir a segundos
-    notifyListeners();
-  }
-
-  /// Inicia o reanuda el temporizador.
-  void startTimer() {
-    if (_timerState == TimerState.running) return; // Ya está corriendo
-
-    if (_timerState == TimerState.stopped) {
-      // Si se inicia desde parado, asegúrate de que el tiempo restante esté configurado
-      _setTimerForPhase(_currentCycleType);
-    }
-
-    _timerState = TimerState.running;
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
-    notifyListeners();
-  }
-
-  /// Pausa el temporizador.
-  void pauseTimer() {
-    if (_timerState != TimerState.running) return; // No está corriendo para pausar
-
-    _timer?.cancel();
-    _timerState = TimerState.paused;
-    notifyListeners();
-  }
-
-  /// Reinicia el temporizador al inicio de la fase actual.
-  void resetTimer() {
-    _timer?.cancel();
-    _timerState = TimerState.stopped;
-    _setTimerForPhase(_currentCycleType); // Restablecer a la duración inicial de la fase actual
-    notifyListeners();
-  }
-
-  /// Salta el ciclo actual y avanza al siguiente.
-  Future<void> skipTimer() async {
-    _timer?.cancel();
-    await _moveToNextCycle(); // Mover al siguiente ciclo y actualizar estadísticas
-    _timerState = TimerState.stopped; // El temporizador se detiene después de saltar
-    notifyListeners();
-  }
-
-  /// Método privado llamado cada segundo por el [Timer].
-  /// Decrementa el tiempo restante o avanza al siguiente ciclo si el tiempo llega a cero.
-  Future<void> _tick() async {
-    if (_remainingTime > 0) {
-      _remainingTime--;
-    } else {
-      _timer?.cancel();
-      await _moveToNextCycle();
-    }
-    notifyListeners();
-  }
-
-  /// Lógica para avanzar al siguiente ciclo (Pomodoro -> Descanso Corto -> Pomodoro -> ... -> Descanso Largo).
-  Future<void> _moveToNextCycle() async {
-    if (_currentCycleType == CycleType.pomodoro) {
-      // Un Pomodoro ha sido completado
-      _pomodorosInCycle++;
-      await _incrementCompletedPomodoros(); // Actualizar estadísticas
-      await _addPomodoroTime(pomodoroDurationMinutes); // Añadir tiempo a estadísticas
-
-      if (_pomodorosInCycle >= longBreakInterval) {
-        // Es hora de un descanso largo
-        _pomodorosInCycle = 0; // Reiniciar el contador para el próximo ciclo de descanso largo
-        _setTimerForPhase(CycleType.longBreak);
-        await _addBreakTime(longBreakDurationMinutes); // Añadir tiempo a estadísticas
-      } else {
-        // Es hora de un descanso corto
-        _setTimerForPhase(CycleType.shortBreak);
-        await _addBreakTime(shortBreakDurationMinutes); // Añadir tiempo a estadísticas
-      }
-    } else {
-      // Un descanso (corto o largo) ha terminado, volver a Pomodoro
-      _setTimerForPhase(CycleType.pomodoro);
-    }
-
-    // Si el temporizador estaba corriendo, reinícialo para la nueva fase
-    if (_timerState == TimerState.running) {
-      startTimer();
-    } else {
-      // Si estaba pausado o detenido, asegúrate de que el estado sea 'stopped'
-      _timerState = TimerState.stopped;
-      notifyListeners();
+    try {
+      _model = await _repository.getPomodoroData();
+    } catch (e) {
+      // En un entorno de producción, se debería usar un logger.
+      debugPrint('Error al cargar datos iniciales: $e');
+      // Si falla la carga, el modelo se mantiene con los valores por defecto.
+    } finally {
+      _isLoading = false;
+      notifyListeners(); // Notifica que la carga ha finalizado y el estado está listo.
     }
   }
 
-  // --- Métodos de gestión de configuración ---
+  /// Actualiza el nombre de usuario y guarda el cambio.
+  /// [newName] El nuevo nombre de usuario.
+  Future<void> updateUserName(String newName) async {
+    try {
+      await _repository.updateUserName(newName);
+      _model.userName = newName; // Actualiza el modelo local.
+      notifyListeners(); // Notifica a los oyentes sobre el cambio.
+    } catch (e) {
+      debugPrint('Error al actualizar el nombre de usuario: $e');
+      // Podrías manejar el error de forma más sofisticada, por ejemplo,
+      // mostrando un mensaje al usuario o revertiendo el cambio en la UI.
+    }
+  }
 
-  /// Actualiza la configuración de los tiempos del Pomodoro y los descansos.
-  /// Persiste los cambios a través del repositorio y actualiza el estado local.
+  /// Actualiza la configuración de los tiempos de Pomodoro y descansos, y guarda el cambio.
+  /// Los parámetros nulos indican que no se debe cambiar esa configuración.
   Future<void> updatePomodoroSettings({
-    required int pomodoroDuration,
-    required int shortBreakDuration,
-    required int longBreakDuration,
-    required int longBreakInterval,
+    int? pomodoroDuration,
+    int? shortBreakDuration,
+    int? longBreakDuration,
+    int? pomodorosBeforeLongBreak,
   }) async {
-    if (_data == null) return; // Los datos deben estar cargados
-
-    await _repository.updatePomodoroSettings(
-      pomodoroDuration: pomodoroDuration,
-      shortBreakDuration: shortBreakDuration,
-      longBreakDuration: longBreakDuration,
-      longBreakInterval: longBreakInterval,
-    );
-    // Actualizar el estado local con los nuevos valores
-    _data = _data!.copyWith(
-      pomodoroDuration: pomodoroDuration,
-      shortBreakDuration: shortBreakDuration,
-      longBreakDuration: longBreakDuration,
-      longBreakInterval: longBreakInterval,
-    );
-    // Si el temporizador está detenido, actualiza su duración para reflejar la nueva configuración
-    if (_timerState == TimerState.stopped) {
-      _setTimerForPhase(_currentCycleType);
+    try {
+      await _repository.updatePomodoroSettings(
+        pomodoroDuration: pomodoroDuration,
+        shortBreakDuration: shortBreakDuration,
+        longBreakDuration: longBreakDuration,
+        pomodorosBeforeLongBreak: pomodorosBeforeLongBreak,
+      );
+      // Actualiza el modelo local con los nuevos valores.
+      if (pomodoroDuration != null) _model.pomodoroDuration = pomodoroDuration;
+      if (shortBreakDuration != null) _model.shortBreakDuration = shortBreakDuration;
+      if (longBreakDuration != null) _model.longBreakDuration = longBreakDuration;
+      if (pomodorosBeforeLongBreak != null) _model.pomodorosBeforeLongBreak = pomodorosBeforeLongBreak;
+      notifyListeners(); // Notifica a los oyentes sobre el cambio.
+    } catch (e) {
+      debugPrint('Error al actualizar la configuración de Pomodoro: $e');
     }
-    notifyListeners();
   }
 
-  // --- Métodos de gestión de estadísticas ---
-
-  /// Incrementa el contador de Pomodoros completados.
-  /// Persiste el cambio y actualiza el estado local.
-  Future<void> _incrementCompletedPomodoros() async {
-    if (_data == null) return;
-    int newCompleted = _data!.completedPomodoros + 1;
-    await _repository.updateStatistics(completedPomodoros: newCompleted);
-    _data = _data!.copyWith(completedPomodoros: newCompleted);
-    // notifyListeners() se llamará en _moveToNextCycle
-  }
-
-  /// Añade tiempo a las estadísticas de tiempo total de Pomodoro.
-  /// Persiste el cambio y actualiza el estado local.
-  Future<void> _addPomodoroTime(int minutes) async {
-    if (_data == null) return;
-    int newTotalTime = _data!.totalPomodoroTime + minutes;
-    await _repository.updateStatistics(totalPomodoroTime: newTotalTime);
-    _data = _data!.copyWith(totalPomodoroTime: newTotalTime);
-    // notifyListeners() se llamará en _moveToNextCycle
-  }
-
-  /// Añade tiempo a las estadísticas de tiempo total de descanso.
-  /// Persiste el cambio y actualiza el estado local.
-  Future<void> _addBreakTime(int minutes) async {
-    if (_data == null) return;
-    int newTotalTime = _data!.totalBreakTime + minutes;
-    await _repository.updateStatistics(totalBreakTime: newTotalTime);
-    _data = _data!.copyWith(totalBreakTime: newTotalTime);
-    // notifyListeners() se llamará en _moveToNextCycle
-  }
-
-  // --- Métodos de gestión de usuario ---
-
-  /// Establece el nombre del usuario.
-  /// Persiste el cambio y actualiza el estado local.
-  Future<void> setUserName(String name) async {
-    if (_data == null) return;
-    await _repository.setUserName(name);
-    _data = _data!.copyWith(userName: name);
-    notifyListeners();
-  }
-
-  /// Marca que el proceso de primer lanzamiento ha sido completado.
-  /// Persiste el cambio y actualiza el estado local.
-  Future<void> markFirstLaunchComplete() async {
-    if (_data == null) return;
-    await _repository.markFirstLaunchComplete();
-    _data = _data!.copyWith(isFirstLaunch: false);
-    notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel(); // Asegúrate de cancelar el temporizador para evitar fugas de memoria
-    super.dispose();
+  /// Registra la finalización de un Pomodoro, actualizando las estadísticas.
+  /// [durationMinutes] La duración del Pomodoro completado en minutos.
+  Future<void> recordPomodoroCompletion(int durationMinutes) async {
+    try {
+      // El repositorio se encarga de actualizar el modelo y guardarlo.
+      await _repository.recordPomodoroCompletion(durationMinutes);
+      // Después de que el repositorio actualiza y guarda,
+      // volvemos a cargar el modelo para asegurar que el estado local esté sincronizado
+      // con los datos persistidos (incluyendo los mapas de estadísticas).
+      _model = await _repository.getPomodoroData();
+      notifyListeners(); // Notifica a los oyentes sobre el cambio en las estadísticas.
+    } catch (e) {
+      debugPrint('Error al registrar la finalización del Pomodoro: $e');
+    }
   }
 }

@@ -1,73 +1,101 @@
-import 'dart:async';
-import 'package:flutter/material.dart'; // Requerido por el usuario
-import '../models/pomodoromanuscriptapp_model.dart';
-import '../datasources/pomodoromanuscriptapp_local_datasource.dart';
+import 'dart:async'; // Para operaciones asíncronas con Future
+import '../datasources/pomodoromanuscriptapp_local_datasource.dart'; // Importa la fuente de datos local
+import '../models/pomodoromanuscriptapp_model.dart'; // Importa el modelo de datos
 
-/// Repositorio para la aplicación PomodoroManuscriptApp.
-///
-/// Actúa como una capa de abstracción entre la capa de dominio (use cases)
-/// y las fuentes de datos (local, remota, etc.).
-/// Es responsable de coordinar los datos de una o varias fuentes de datos.
-class PomodoroManuscriptRepository {
-  final PomodoroManuscriptLocalDataSource localDataSource;
+/// Interfaz abstracta para el repositorio de la aplicación PomodoroManuscriptApp.
+/// Define los contratos para interactuar con los datos del modelo,
+/// proporcionando una abstracción sobre la fuente de datos.
+abstract class PomodoroManuscriptAppRepository {
+  /// Obtiene los datos completos del modelo PomodoroManuscriptAppModel.
+  /// Si no hay datos guardados, retorna un modelo con valores predeterminados.
+  Future<PomodoroManuscriptAppModel> getPomodoroData();
 
-  PomodoroManuscriptRepository({required this.localDataSource});
+  /// Guarda el modelo PomodoroManuscriptAppModel completo en la fuente de datos.
+  Future<void> savePomodoroData(PomodoroManuscriptAppModel model);
 
-  /// Obtiene todos los datos de la aplicación (configuración, estadísticas, usuario).
-  Future<PomodoroManuscriptData> getPomodoroData() async {
-    return await localDataSource.loadData();
-  }
+  /// Actualiza el nombre de usuario y guarda el modelo.
+  Future<void> updateUserName(String newName);
 
-  /// Guarda todos los datos de la aplicación.
-  Future<void> savePomodoroData(PomodoroManuscriptData data) async {
-    await localDataSource.saveData(data);
-  }
-
-  /// Actualiza la configuración del temporizador Pomodoro.
+  /// Actualiza la configuración de los tiempos de Pomodoro y descansos, y guarda el modelo.
   Future<void> updatePomodoroSettings({
     int? pomodoroDuration,
     int? shortBreakDuration,
     int? longBreakDuration,
-    int? longBreakInterval,
+    int? pomodorosBeforeLongBreak,
+  });
+
+  /// Registra la finalización de un Pomodoro, actualizando las estadísticas
+  /// de Pomodoros completados y tiempo de enfoque.
+  Future<void> recordPomodoroCompletion(int durationMinutes);
+}
+
+/// Implementación concreta de [PomodoroManuscriptAppRepository].
+/// Coordina el acceso a los datos a través de la fuente de datos local.
+class PomodoroManuscriptAppRepositoryImpl
+    implements PomodoroManuscriptAppRepository {
+  final PomodoroManuscriptAppLocalDataSource _localDataSource;
+
+  /// Constructor que recibe una instancia de [PomodoroManuscriptAppLocalDataSource].
+  /// Esto permite la inyección de dependencias y facilita las pruebas.
+  PomodoroManuscriptAppRepositoryImpl(this._localDataSource);
+
+  @override
+  Future<PomodoroManuscriptAppModel> getPomodoroData() async {
+    final PomodoroManuscriptAppModel? data = await _localDataSource.loadData();
+    // Si no hay datos guardados, retorna un nuevo modelo con valores predeterminados.
+    return data ?? PomodoroManuscriptAppModel();
+  }
+
+  @override
+  Future<void> savePomodoroData(PomodoroManuscriptAppModel model) async {
+    await _localDataSource.saveData(model);
+  }
+
+  @override
+  Future<void> updateUserName(String newName) async {
+    final PomodoroManuscriptAppModel currentData = await getPomodoroData();
+    currentData.userName = newName;
+    await savePomodoroData(currentData);
+  }
+
+  @override
+  Future<void> updatePomodoroSettings({
+    int? pomodoroDuration,
+    int? shortBreakDuration,
+    int? longBreakDuration,
+    int? pomodorosBeforeLongBreak,
   }) async {
-    PomodoroManuscriptData currentData = await getPomodoroData();
-    PomodoroManuscriptData updatedData = currentData.copyWith(
-      pomodoroDuration: pomodoroDuration,
-      shortBreakDuration: shortBreakDuration,
-      longBreakDuration: longBreakDuration,
-      longBreakInterval: longBreakInterval,
-    );
-    await savePomodoroData(updatedData);
+    final PomodoroManuscriptAppModel currentData = await getPomodoroData();
+    if (pomodoroDuration != null)
+      currentData.pomodoroDuration = pomodoroDuration;
+    if (shortBreakDuration != null)
+      currentData.shortBreakDuration = shortBreakDuration;
+    if (longBreakDuration != null)
+      currentData.longBreakDuration = longBreakDuration;
+    if (pomodorosBeforeLongBreak != null)
+      currentData.pomodorosBeforeLongBreak = pomodorosBeforeLongBreak;
+    await savePomodoroData(currentData);
   }
 
-  /// Actualiza las estadísticas de productividad.
-  Future<void> updateStatistics({
-    int? completedPomodoros,
-    int? totalPomodoroTime,
-    int? totalBreakTime,
-  }) async {
-    PomodoroManuscriptData currentData = await getPomodoroData();
-    PomodoroManuscriptData updatedData = currentData.copyWith(
-      completedPomodoros: completedPomodoros,
-      totalPomodoroTime: totalPomodoroTime,
-      totalBreakTime: totalBreakTime,
-    );
-    await savePomodoroData(updatedData);
+  @override
+  Future<void> recordPomodoroCompletion(int durationMinutes) async {
+    final PomodoroManuscriptAppModel currentData = await getPomodoroData();
+    final String todayKey = _formatDate(DateTime.now());
+
+    currentData.incrementDailyPomodoros(todayKey);
+    currentData.addDailyFocusTime(todayKey, durationMinutes);
+
+    await savePomodoroData(currentData);
   }
 
-  /// Establece el nombre del usuario.
-  Future<void> setUserName(String name) async {
-    PomodoroManuscriptData currentData = await getPomodoroData();
-    PomodoroManuscriptData updatedData = currentData.copyWith(userName: name);
-    await savePomodoroData(updatedData);
+  /// Método auxiliar para formatear una fecha a una clave de cadena "YYYY-MM-DD".
+  String _formatDate(DateTime date) {
+    return '${date.year}-${_twoDigits(date.month)}-${_twoDigits(date.day)}';
   }
 
-  /// Marca que el proceso de primer lanzamiento (ej. pedir nombre) ha sido completado.
-  Future<void> markFirstLaunchComplete() async {
-    PomodoroManuscriptData currentData = await getPomodoroData();
-    PomodoroManuscriptData updatedData = currentData.copyWith(
-      isFirstLaunch: false,
-    );
-    await savePomodoroData(updatedData);
+  /// Método auxiliar para asegurar que los números de un solo dígito tengan un cero inicial.
+  String _twoDigits(int n) {
+    if (n >= 10) return '$n';
+    return '0$n';
   }
 }
