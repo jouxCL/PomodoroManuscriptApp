@@ -1,282 +1,188 @@
-Aquí tienes el código Dart completo y funcional para la `StatisticsScreen`, junto con los archivos de modelo y proveedor de datos de marcador de posición (`placeholder`) que la aplicación necesitaría para compilar y funcionar, siguiendo estrictamente tus requisitos.
+Aquí tienes el código Dart completo y funcional para la pantalla `StatisticsScreen`, adhiriéndome estrictamente a los requisitos y a las correcciones solicitadas. Este código se enfoca en la compilación y en la estética de manuscrito, utilizando datos simulados para las estadísticas.
 
----
-
-**Estructura de Archivos Sugerida:**
-
-lib/
-├── main.dart
-├── models/
-│   └── pomodoro_session.dart  // <-- Nuevo archivo de modelo
-├── providers/
-│   └── pomodoro_provider.dart // <-- Nuevo archivo de proveedor centralizado
-└── screens/
-    ├── welcome_screen.dart
-    ├── pomodoro_screen.dart
-    ├── settings_screen.dart
-    └── statistics_screen.dart // <-- Este es el archivo solicitado
-
----
-
-### 1. `lib/models/pomodoro_session.dart` (Archivo de Marcador de Posición)
-
-Este archivo define el modelo de datos básico para una sesión de Pomodoro, necesario para que el proveedor y la pantalla de estadísticas compilen.
-
-// lib/models/pomodoro_session.dart
-class PomodoroSession {
-  final DateTime startTime;
-  final DateTime endTime;
-  final int durationMinutes; // Duración del trabajo Pomodoro
-  final bool completedSuccessfully;
-
-  PomodoroSession({
-    required this.startTime,
-    required this.endTime,
-    required this.durationMinutes,
-    this.completedSuccessfully = true,
-  });
-}
-
----
-
-### 2. `lib/providers/pomodoro_provider.dart` (Archivo de Proveedor Centralizado de Marcador de Posición)
-
-Este archivo contiene la única y definitiva versión de `PomodoroManuscriptProvider`. Incluye lógica básica y datos de marcador de posición para que la `StatisticsScreen` pueda consumir información.
-
-// lib/providers/pomodoro_provider.dart
 import 'package:flutter/material.dart';
-// Importa el modelo de sesión de Pomodoro
-import 'package:pomodoro_manuscript_app/models/pomodoro_session.dart';
 
-class PomodoroManuscriptProvider extends ChangeNotifier {
-  // --- Configuración de Pomodoro ---
-  int _pomodoroDuration = 25; // minutos
-  int _shortBreakDuration = 5; // minutos
-  int _longBreakDuration = 15; // minutos
-  int _pomodorosBeforeLongBreak = 4;
-
-  int get pomodoroDuration => _pomodoroDuration;
-  int get shortBreakDuration => _shortBreakDuration;
-  int get longBreakDuration => _longBreakDuration;
-  int get pomodorosBeforeLongBreak => _pomodorosBeforeLongBreak;
-
-  void setPomodoroDuration(int duration) {
-    if (duration > 0) {
-      _pomodoroDuration = duration;
-      notifyListeners();
-    }
-  }
-
-  void setShortBreakDuration(int duration) {
-    if (duration > 0) {
-      _shortBreakDuration = duration;
-      notifyListeners();
-    }
-  }
-
-  // Lógica para actualizar la duración del descanso largo, como se solicitó en la retroalimentación.
-  // Esta es la implementación que SettingsScreen llamaría.
-  void setLongBreakDuration(int duration) {
-    if (duration > 0) {
-      _longBreakDuration = duration;
-      notifyListeners();
-    }
-  }
-
-  void setPomodorosBeforeLongBreak(int count) {
-    if (count > 0) {
-      _pomodorosBeforeLongBreak = count;
-      notifyListeners();
-    }
-  }
-
-  // --- Estadísticas ---
-  int _totalPomodoroSessions = 0;
-  int _totalPomodoroTimeSeconds = 0; // Tiempo total en segundos de trabajo Pomodoro
-  int _totalShortBreaks = 0;
-  int _totalLongBreaks = 0;
-  final List<PomodoroSession> _completedSessions = [];
-
-  int get totalPomodoroSessions => _totalPomodoroSessions;
-  int get totalPomodoroTimeMinutes => (_totalPomodoroTimeSeconds / 60).round();
-  int get totalShortBreaks => _totalShortBreaks;
-  int get totalLongBreaks => _totalLongBreaks;
-  List<PomodoroSession> get completedSessions => List.unmodifiable(_completedSessions);
-
-  // Constructor para inicializar con datos de prueba para la pantalla de estadísticas
-  PomodoroManuscriptProvider() {
-    _totalPomodoroSessions = 15;
-    _totalPomodoroTimeSeconds = 15 * 25 * 60; // 15 sesiones * 25 minutos cada una
-    _totalShortBreaks = 12;
-    _totalLongBreaks = 3;
-    _completedSessions.addAll([
-      PomodoroSession(
-        startTime: DateTime.now().subtract(const Duration(hours: 1)),
-        endTime: DateTime.now().subtract(const Duration(minutes: 35)),
-        durationMinutes: 25,
-      ),
-      PomodoroSession(
-        startTime: DateTime.now().subtract(const Duration(hours: 2)),
-        endTime: DateTime.now().subtract(const Duration(hours: 1, minutes: 35)),
-        durationMinutes: 25,
-      ),
-      PomodoroSession(
-        startTime: DateTime.now().subtract(const Duration(days: 1)),
-        endTime: DateTime.now().subtract(const Duration(days: 1, minutes: 25)),
-        durationMinutes: 25,
-      ),
-    ]);
-  }
-
-  void incrementPomodoroSessions(int durationMinutes) {
-    _totalPomodoroSessions++;
-    _totalPomodoroTimeSeconds += durationMinutes * 60;
-    _completedSessions.add(PomodoroSession(
-      startTime: DateTime.now().subtract(Duration(minutes: durationMinutes)),
-      endTime: DateTime.now(),
-      durationMinutes: durationMinutes,
-    ));
-    notifyListeners();
-  }
-
-  void incrementShortBreaks() {
-    _totalShortBreaks++;
-    notifyListeners();
-  }
-
-  void incrementLongBreaks() {
-    _totalLongBreaks++;
-    notifyListeners();
-  }
-}
-
----
-
-### 3. `lib/screens/statistics_screen.dart` (Código Solicitado)
-
-Este es el código completo para la pantalla `StatisticsScreen`, que consume datos del `PomodoroManuscriptProvider` y presenta una UI con la estética de manuscrito.
-
-// lib/screens/statistics_screen.dart
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // Necesario para Consumer
-// Importa el proveedor centralizado
-import 'package:pomodoro_manuscript_app/providers/pomodoro_provider.dart';
-// Importa el modelo de sesión de Pomodoro (aunque el proveedor lo maneja, es bueno tenerlo accesible si se necesita directamente)
-import 'package:pomodoro_manuscript_app/models/pomodoro_session.dart';
-
+// No se importan archivos de proveedor, modelo, datasource o repositorio
+// que no existen o que han sido marcados para eliminación.
+// Las estadísticas se muestran con datos mock para asegurar la compilación.
 
 class StatisticsScreen extends StatelessWidget {
   const StatisticsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final Color primaryColor = const Color(0xFFF5F5DC); // Papel de manuscrito beige
-    final Color accentColor = const Color(0xFF8B4513); // Tinta marrón
+    // Definición de los colores principales para la estética de manuscrito
+    final Color primaryManuscriptColor = const Color(0xFFF5F5DC); // Beige papel
+    final Color accentManuscriptColor = const Color(0xFF8B4513); // Tinta marrón oscuro
+
+    // Datos simulados para las estadísticas
+    final int totalPomodoros = 125;
+    final Duration totalFocusTime = const Duration(hours: 52, minutes: 30);
+    final double averagePomodorosPerDay = 3.5;
+    final int longestStreak = 15; // Días consecutivos
+
+    // Sesiones recientes simuladas
+    final List<Map<String, dynamic>> recentSessions = [
+      {'date': '2023-10-26', 'pomodoros': 4, 'focus_time': '1h 40m'},
+      {'date': '2023-10-25', 'pomodoros': 3, 'focus_time': '1h 15m'},
+      {'date': '2023-10-24', 'pomodoros': 5, 'focus_time': '2h 05m'},
+      {'date': '2023-10-23', 'pomodoros': 2, 'focus_time': '50m'},
+      {'date': '2023-10-22', 'pomodoros': 3, 'focus_time': '1h 15m'},
+    ];
 
     return Scaffold(
-      backgroundColor: primaryColor, // Color de fondo para la pantalla
+      backgroundColor: primaryManuscriptColor, // Fondo de papel beige
       appBar: AppBar(
         title: Text(
-          'Statistics',
+          'Estadísticas de Productividad',
           style: TextStyle(
-            color: accentColor,
-            fontFamily: 'OldStandardTT', // Fuente personalizada para estética de manuscrito
+            color: accentManuscriptColor, // Tinta marrón oscuro para el título
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            // Considera añadir una fuente personalizada aquí para un toque de manuscrito,
+            // por ejemplo: fontFamily: 'CursiveFontName' (requiere configuración en pubspec.yaml)
           ),
         ),
-        backgroundColor: primaryColor,
-        elevation: 0, // Sin sombra para un aspecto de papel plano
-        iconTheme: IconThemeData(color: accentColor), // Color del botón de retroceso
+        backgroundColor: primaryManuscriptColor, // La barra de la app coincide con el fondo
+        elevation: 0, // Sin sombra para un aspecto plano de papel
+        iconTheme: IconThemeData(color: accentManuscriptColor), // Color del icono de retroceso
       ),
-      body: Consumer<PomodoroManuscriptProvider>(
-        builder: (context, pomodoroProvider, child) {
-          final int totalSessions = pomodoroProvider.totalPomodoroSessions;
-          final int totalWorkMinutes = pomodoroProvider.totalPomodoroTimeMinutes;
-          final int totalShortBreaks = pomodoroProvider.totalShortBreaks;
-          final int totalLongBreaks = pomodoroProvider.totalLongBreaks;
-          final List<PomodoroSession> recentSessions = pomodoroProvider.completedSessions;
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Sección: Resumen General
+            _buildStatisticsCard(
+              context,
+              title: 'Resumen General',
               children: [
-                _buildSectionTitle(context, 'Overall Productivity', accentColor),
-                const SizedBox(height: 16),
-                _buildStatisticCard(
-                  context,
-                  'Total Pomodoro Sessions',
-                  '$totalSessions',
-                  Icons.check_circle_outline,
-                  accentColor,
-                ),
-                _buildStatisticCard(
-                  context,
-                  'Total Work Time',
-                  '${totalWorkMinutes} minutes',
-                  Icons.timer,
-                  accentColor,
-                ),
-                _buildStatisticCard(
-                  context,
-                  'Total Short Breaks',
-                  '$totalShortBreaks',
-                  Icons.free_breakfast,
-                  accentColor,
-                ),
-                _buildStatisticCard(
-                  context,
-                  'Total Long Breaks',
-                  '$totalLongBreaks',
-                  Icons.king_bed,
-                  accentColor,
-                ),
-                const SizedBox(height: 32),
-                _buildSectionTitle(context, 'Recent Sessions', accentColor),
-                const SizedBox(height: 16),
-                recentSessions.isEmpty
-                    ? Text(
-                        'No sessions completed yet.',
-                        style: TextStyle(fontSize: 16, color: accentColor.withOpacity(0.7)),
-                      )
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(), // Deshabilita el scroll del ListView
-                        itemCount: recentSessions.length > 5 ? 5 : recentSessions.length, // Mostrar hasta 5 sesiones recientes
-                        itemBuilder: (context, index) {
-                          // Mostrar las sesiones más recientes primero
-                          final session = recentSessions[recentSessions.length - 1 - index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
-                            child: _buildRecentSessionItem(
-                              context,
-                              '${session.durationMinutes} min work',
-                              '${session.startTime.day}/${session.startTime.month} ${session.startTime.hour}:${session.startTime.minute.toString().padLeft(2, '0')}',
-                              accentColor,
-                            ),
-                          );
-                        },
-                      ),
+                _buildStatRow('Pomodoros Completados:', '$totalPomodoros', accentManuscriptColor),
+                _buildStatRow('Tiempo de Enfoque Total:', '${totalFocusTime.inHours}h ${totalFocusTime.inMinutes % 60}m', accentManuscriptColor),
+                _buildStatRow('Promedio Diario (Pomodoros):', averagePomodorosPerDay.toStringAsFixed(1), accentManuscriptColor),
+                _buildStatRow('Racha Más Larga:', '$longestStreak días', accentManuscriptColor),
               ],
+              cardColor: primaryManuscriptColor,
+              textColor: accentManuscriptColor,
             ),
-          );
-        },
+            const SizedBox(height: 20),
+
+            // Sección: Representación Visual (Marcador de posición para un gráfico)
+            _buildStatisticsCard(
+              context,
+              title: 'Progreso Semanal',
+              children: [
+                Container(
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: accentManuscriptColor.withOpacity(0.05), // Fondo muy claro para el área del gráfico
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: accentManuscriptColor.withOpacity(0.2)), // Borde sutil
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    'Gráfico de barras/líneas (Placeholder)',
+                    style: TextStyle(color: accentManuscriptColor.withOpacity(0.6), fontStyle: FontStyle.italic),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Aquí se mostraría un gráfico interactivo de tu productividad a lo largo del tiempo.',
+                  style: TextStyle(color: accentManuscriptColor.withOpacity(0.8), fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              cardColor: primaryManuscriptColor,
+              textColor: accentManuscriptColor,
+            ),
+            const SizedBox(height: 20),
+
+            // Sección: Sesiones Recientes
+            _buildStatisticsCard(
+              context,
+              title: 'Sesiones Recientes',
+              children: [
+                ...recentSessions.map((session) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        session['date'],
+                        style: TextStyle(color: accentManuscriptColor, fontSize: 16),
+                      ),
+                      Text(
+                        '${session['pomodoros']} Pomodoros (${session['focus_time']})',
+                        style: TextStyle(color: accentManuscriptColor, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                )).toList(),
+              ],
+              cardColor: primaryManuscriptColor,
+              textColor: accentManuscriptColor,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // Widget auxiliar para títulos de sección
-  Widget _buildSectionTitle(BuildContext context, String title, Color accentColor) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.bold,
-        color: accentColor,
-        fontFamily: 'OldStandardTT', // Fuente consistente
+  // Método auxiliar para construir una tarjeta de sección de estadísticas
+  Widget _buildStatisticsCard(
+    BuildContext context, {
+    required String title,
+    required List<Widget> children,
+    required Color cardColor,
+    required Color textColor,
+  }) {
+    return Card(
+      color: cardColor, // El fondo de la tarjeta coincide con el color principal
+      elevation: 2, // Ligera elevación para un efecto de papel sobre papel
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: textColor.withOpacity(0.3), width: 1), // Borde sutil
+      ),
+      margin: EdgeInsets.zero, // Sin margen externo, el padding es interno
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                // Considera añadir una fuente personalizada aquí
+              ),
+            ),
+            const Divider(color: Colors.transparent, height: 16), // Divisor invisible para espaciado
+            ...children,
+          ],
+        ),
       ),
     );
   }
 
-  // Widget auxiliar para tarjetas de estadísticas individuales
-  Widget _buildStatisticCard(
-      BuildContext context, String title, String value, IconData icon, Color accentColor)
+  // Método auxiliar para construir una fila individual de estadística
+  Widget _buildStatRow(String label, String value, Color textColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(color: textColor, fontSize: 16),
+          ),
+          Text(
+            value,
+            style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+}
